@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import type { DesignReference } from '@/types/designReference'
+import { ReferenceEditForm } from './ReferenceEditForm'
 
 export function ReferenceManager({
   initialReferences,
@@ -13,6 +14,12 @@ export function ReferenceManager({
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [references, setReferences] = useState(initialReferences)
+  const [editingId, setEditingId] = useState<string | null>(null)
+
+  function handleSaved(updated: DesignReference) {
+    setReferences((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))
+    setEditingId(null)
+  }
 
   async function loadReferences() {
     const res = await fetch('/api/admin/references')
@@ -62,23 +69,50 @@ export function ReferenceManager({
       <ul className="space-y-3">
         {references.map((ref) => (
           <li key={ref.id} className="rounded-lg border border-gray-200 p-4">
-            <div className="flex items-baseline justify-between gap-2">
-              <a
-                href={ref.url}
-                target="_blank"
-                rel="noreferrer"
-                className="font-medium text-green-800 hover:underline"
+            <div className="flex gap-4">
+              {ref.analysis?.screenshotUrl && (
+                // 外部Storage上のスクリーンショットなので next/image は使わない
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={ref.analysis.screenshotUrl}
+                  alt={`${ref.title} のスクリーンショット`}
+                  className="h-20 w-32 shrink-0 rounded border border-gray-100 object-cover object-top"
+                />
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline justify-between gap-2">
+                  <a
+                    href={ref.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="truncate font-medium text-green-800 hover:underline"
+                  >
+                    {ref.title}
+                  </a>
+                  <span className="shrink-0 text-xs text-gray-500">
+                    {ref.industry} / {ref.status}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-gray-600">{ref.summary}</p>
+                <p className="mt-1 text-xs text-gray-400">
+                  {ref.style_tags.join(' / ')}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                className="shrink-0 self-start"
+                onClick={() => setEditingId(editingId === ref.id ? null : ref.id)}
               >
-                {ref.title}
-              </a>
-              <span className="shrink-0 text-xs text-gray-500">
-                {ref.industry} / {ref.status}
-              </span>
+                編集
+              </Button>
             </div>
-            <p className="mt-1 text-sm text-gray-600">{ref.summary}</p>
-            <p className="mt-1 text-xs text-gray-400">
-              {ref.style_tags.join(' / ')}
-            </p>
+            {editingId === ref.id && (
+              <ReferenceEditForm
+                reference={ref}
+                onSaved={handleSaved}
+                onCancel={() => setEditingId(null)}
+              />
+            )}
           </li>
         ))}
       </ul>
