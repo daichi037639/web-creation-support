@@ -24,3 +24,37 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ステップクリア演出（StepClearOverlay）。ライブラリを使わない方針のため自前定義 */
+@keyframes clear-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes confetti {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-70px);
+    opacity: 0;
+  }
+}
+
+.animate-clear-pop {
+  animation: clear-pop 0.4s ease-out;
+}
+
+.animate-confetti {
+  animation: confetti 0.9s ease-out forwards;
+}

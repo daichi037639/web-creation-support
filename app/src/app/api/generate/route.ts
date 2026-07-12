@@ -1,4 +1,5 @@
 import { generateSiteCode } from '@/lib/claude'
+import { buildPlanningContext } from '@/lib/questions'
 import { WizardAnswers } from '@/types/wizard'
 
 export const runtime = 'nodejs'
@@ -6,17 +7,7 @@ export const runtime = 'nodejs'
 function buildContext(answers: WizardAnswers): string {
   const a = answers
   return `
-事業名: ${a.step1?.businessName ?? '未入力'}
-商品・サービス: ${a.step1?.products ?? '未入力'}
-強み・こだわり: ${a.step1?.strengths ?? '未入力'}
-歴史・背景: ${a.step1?.history ?? '未入力'}
-
-ターゲット年代: ${a.step2?.targetAge ?? '未入力'}
-ターゲットの悩み: ${a.step2?.targetProblem ?? '未入力'}
-ターゲットの願望: ${a.step2?.targetDesire ?? '未入力'}
-
-メインメッセージ: ${a.step3?.mainMessage ?? '未入力'}
-トーン・雰囲気: ${a.step3?.tone ?? '未入力'}
+${buildPlanningContext(a)}
 
 ページ構成: ${a.step4?.pages?.join(', ') ?? '未入力'}
 問い合わせフォーム: ${a.step4?.hasContactForm ? 'あり' : 'なし'}

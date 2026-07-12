@@ -1,10 +1,12 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
 import { StepLayout } from '@/components/wizard/StepLayout'
 import { AiChatOverlay } from '@/components/wizard/AiChatOverlay'
+import { ChipSelect } from '@/components/ui/ChipSelect'
 import { loadWizardState, saveWizardState, updateStepAnswers, markStepComplete } from '@/lib/storage'
+import { useWizardState } from '@/lib/useWizardState'
+import { Step4Answers } from '@/types/wizard'
 
 const PAGE_OPTIONS = ['トップ（ホーム）', '商品・サービス紹介', '私たちについて（About）', 'お客さまの声', 'よくある質問', 'お問い合わせ', 'アクセス・店舗情報', 'ブログ・お知らせ']
 
@@ -22,34 +24,27 @@ const FEATURE_OPTIONS: FeatureOption[] = [
 
 export default function Step4Page() {
   const router = useRouter()
-  const [pages, setPages] = useState<string[]>(['トップ（ホーム）'])
-  const [features, setFeatures] = useState({ hasContactForm: false, hasReservation: false, hasEcommerce: false })
+  const { answers } = useWizardState()
+  const step4 = answers.step4 ?? {}
+  const pages = step4.pages ?? ['トップ（ホーム）']
 
-  useEffect(() => {
-    const state = loadWizardState()
-    if (state.answers.step4) {
-      if (state.answers.step4.pages) setPages(state.answers.step4.pages)
-      setFeatures({
-        hasContactForm: state.answers.step4.hasContactForm ?? false,
-        hasReservation: state.answers.step4.hasReservation ?? false,
-        hasEcommerce: state.answers.step4.hasEcommerce ?? false,
-      })
-    }
-  }, [])
+  function update(patch: Step4Answers) {
+    saveWizardState(updateStepAnswers(loadWizardState(), 'step4', patch))
+  }
 
   function togglePage(p: string) {
-    setPages((prev) => prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p])
+    update({ pages: pages.includes(p) ? pages.filter((x) => x !== p) : [...pages, p] })
   }
 
   function save() {
     let state = loadWizardState()
-    state = updateStepAnswers(state, 'step4', { pages, ...features })
+    state = updateStepAnswers(state, 'step4', { pages, ...step4 })
     state = markStepComplete(state, 4)
     saveWizardState(state)
     router.push('/wizard/step-5')
   }
 
-  const hasComplexFeature = features.hasContactForm || features.hasReservation || features.hasEcommerce
+  const hasComplexFeature = !!(step4.hasContactForm || step4.hasReservation || step4.hasEcommerce)
 
   return (
     <>
@@ -61,20 +56,12 @@ export default function Step4Page() {
         nextDisabled={pages.length === 0}
         prevHref="/wizard/step-3"
       >
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-gray-700">必要なページを選んでください（複数選択可）</p>
-          <div className="flex flex-wrap gap-2">
-            {PAGE_OPTIONS.map((p) => (
-              <button
-                key={p}
-                onClick={() => togglePage(p)}
-                className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${pages.includes(p) ? 'border-green-600 bg-green-50 text-green-700 font-medium' : 'border-gray-200 text-gray-600 hover:border-gray-400'}`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        </div>
+        <ChipSelect
+          label="必要なページを選んでください（複数選択可）"
+          options={PAGE_OPTIONS.map((p) => ({ value: p, label: p }))}
+          selected={pages}
+          onToggle={togglePage}
+        />
 
         <div className="flex flex-col gap-2">
           <p className="text-sm font-medium text-gray-700">必要な機能はありますか？</p>
@@ -83,8 +70,8 @@ export default function Step4Page() {
               <label key={key} className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={features[key]}
-                  onChange={(e) => setFeatures({ ...features, [key]: e.target.checked })}
+                  checked={step4[key] ?? false}
+                  onChange={(e) => update({ [key]: e.target.checked })}
                   className="mt-0.5 h-4 w-4 accent-green-700"
                 />
                 <span>

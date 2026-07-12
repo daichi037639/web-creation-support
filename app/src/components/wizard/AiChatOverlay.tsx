@@ -5,24 +5,43 @@ import { Button } from '@/components/ui/Button'
 import { TextArea } from '@/components/ui/TextArea'
 import { ChatMessage } from '@/lib/claude'
 
-interface AiChatOverlayProps {
-  systemContext: string
+/** id を変えて渡すたびに、そのトピックでチャットが開いて相談が始まる */
+export interface ConsultRequest {
+  id: number
+  topic: string
 }
 
-export function AiChatOverlay({ systemContext }: AiChatOverlayProps) {
+interface AiChatOverlayProps {
+  systemContext: string
+  consultRequest?: ConsultRequest | null
+}
+
+export function AiChatOverlay({ systemContext, consultRequest }: AiChatOverlayProps) {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const handledConsultId = useRef(0)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  async function send() {
-    if (!input.trim() || loading) return
-    const userMsg: ChatMessage = { role: 'user', content: input.trim() }
+  useEffect(() => {
+    if (!consultRequest || consultRequest.id === handledConsultId.current) return
+    handledConsultId.current = consultRequest.id
+    setOpen(true)
+    sendMessage(
+      `「${consultRequest.topic}」という質問にうまく答えられません。一緒に考えてもらえますか？`,
+    )
+    // sendMessage は毎レンダーで再生成されるため deps に含めず、id の重複ガードで多重送信を防ぐ
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [consultRequest])
+
+  async function sendMessage(text: string) {
+    if (!text.trim() || loading) return
+    const userMsg: ChatMessage = { role: 'user', content: text.trim() }
     const next = [...messages, userMsg]
     setMessages(next)
     setInput('')
@@ -95,9 +114,9 @@ export function AiChatOverlay({ systemContext }: AiChatOverlayProps) {
                 placeholder="質問を入力..."
                 rows={2}
                 className="flex-1"
-                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input) } }}
               />
-              <Button onClick={send} disabled={loading || !input.trim()} className="shrink-0">
+              <Button onClick={() => sendMessage(input)} disabled={loading || !input.trim()} className="shrink-0">
                 送信
               </Button>
             </div>

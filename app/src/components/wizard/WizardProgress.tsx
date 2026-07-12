@@ -5,13 +5,31 @@ import { STEPS, StepId } from '@/types/wizard'
 interface WizardProgressProps {
   currentStep: StepId
   completedSteps: StepId[]
+  /** 回答済みカード数ベースの完成度（0〜100）。未指定なら非表示 */
+  cardProgress?: { answered: number; total: number }
 }
 
-export function WizardProgress({ currentStep, completedSteps }: WizardProgressProps) {
+export function WizardProgress({ currentStep, completedSteps, cardProgress }: WizardProgressProps) {
   const visibleSteps = STEPS.filter((s) => s.id > 0)
+  const percent = cardProgress && cardProgress.total > 0
+    ? Math.round((cardProgress.answered / cardProgress.total) * 100)
+    : null
 
   return (
     <nav className="w-full border-b border-gray-100 bg-white px-4 py-3">
+      {percent !== null && (
+        <div className="mx-auto mb-2 flex max-w-md items-center gap-2">
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
+            <div
+              className="h-full rounded-full bg-green-600 transition-all duration-500"
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+          <span className="shrink-0 text-[11px] font-semibold text-green-700">
+            完成度 {percent}%
+          </span>
+        </div>
+      )}
       <ol className="flex items-center justify-center gap-1 overflow-x-auto">
         {visibleSteps.map((step, i) => {
           const isDone = completedSteps.includes(step.id)

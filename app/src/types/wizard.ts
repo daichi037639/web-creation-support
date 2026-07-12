@@ -11,6 +11,32 @@ export const STEPS: { id: StepId; title: string; description: string }[] = [
   { id: 7, title: '公開', description: 'GitHub + Vercelでデプロイ' },
 ]
 
+export type BusinessType = 'store' | 'online' | 'both' | 'visit'
+
+export type Industry =
+  | 'restaurant'
+  | 'retail'
+  | 'food-producer'
+  | 'beauty'
+  | 'lodging'
+  | 'school'
+  | 'professional'
+  | 'manufacturing'
+  | 'other'
+
+export interface BusinessProfile {
+  businessType?: BusinessType
+  industry?: Industry
+  industryOther?: string
+}
+
+export type CardStatus = 'unanswered' | 'answered' | 'deferred'
+
+export interface CardAnswer {
+  value: string
+  status: CardStatus
+}
+
 export interface Step4Answers {
   pages?: string[]
   hasContactForm?: boolean
@@ -19,19 +45,10 @@ export interface Step4Answers {
 }
 
 export interface WizardAnswers {
-  step1?: {
-    businessName?: string
-    products?: string
-    strengths?: string
-    history?: string
-  }
-  step2?: {
-    targetAge?: string
-    targetProblem?: string
-    targetDesire?: string
-  }
+  profile?: BusinessProfile
+  /** STEP 1〜3 の回答。キーは質問バンク（lib/questions.ts）の質問ID */
+  cards?: Record<string, CardAnswer>
   step3?: {
-    mainMessage?: string
     tone?: string
   }
   step4?: Step4Answers

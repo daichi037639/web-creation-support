@@ -1,36 +1,28 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { StepLayout } from '@/components/wizard/StepLayout'
 import { AiChatOverlay } from '@/components/wizard/AiChatOverlay'
 import { Button } from '@/components/ui/Button'
 import { loadWizardState, saveWizardState, updateStepAnswers, markStepComplete } from '@/lib/storage'
-import { WizardAnswers } from '@/types/wizard'
+import { useWizardState } from '@/lib/useWizardState'
 
 export default function Step6Page() {
   const router = useRouter()
-  const [answers, setAnswers] = useState<WizardAnswers>({})
-  const [generatedCode, setGeneratedCode] = useState('')
-  const [codeType, setCodeType] = useState<'static' | 'nextjs'>('static')
+  const { answers } = useWizardState()
+  const [streamCode, setStreamCode] = useState('')
+  const [streamType, setStreamType] = useState<'static' | 'nextjs' | null>(null)
   const [generating, setGenerating] = useState(false)
-  const [showPreview, setShowPreview] = useState(false)
   const previewRef = useRef<HTMLIFrameElement>(null)
 
-  useEffect(() => {
-    const state = loadWizardState()
-    setAnswers(state.answers)
-    if (state.answers.step6?.generatedCode) {
-      setGeneratedCode(state.answers.step6.generatedCode)
-      setCodeType(state.answers.step6.codeType ?? 'static')
-      setShowPreview(true)
-    }
-  }, [])
+  const generatedCode = generating ? streamCode : (answers.step6?.generatedCode ?? '')
+  const codeType = streamType ?? answers.step6?.codeType ?? 'static'
+  const showPreview = !generating && generatedCode !== ''
 
   async function generate() {
     setGenerating(true)
-    setGeneratedCode('')
-    setShowPreview(false)
+    setStreamCode('')
 
     const res = await fetch('/api/generate', {
       method: 'POST',
@@ -39,7 +31,7 @@ export default function Step6Page() {
     })
 
     const detectedType = (res.headers.get('X-Code-Type') ?? 'static') as 'static' | 'nextjs'
-    setCodeType(detectedType)
+    setStreamType(detectedType)
 
     if (!res.body) { setGenerating(false); return }
 
@@ -50,7 +42,7 @@ export default function Step6Page() {
       const { done, value } = await reader.read()
       if (done) break
       code += decoder.decode(value, { stream: true })
-      setGeneratedCode(code)
+      setStreamCode(code)
     }
 
     let state = loadWizardState()
@@ -59,7 +51,6 @@ export default function Step6Page() {
     saveWizardState(state)
 
     setGenerating(false)
-    setShowPreview(true)
   }
 
   function saveAndNext() {
