@@ -34,6 +34,22 @@ export async function streamChat(
   })
 }
 
+export async function completeText(
+  userContent: string,
+  systemPrompt: string,
+): Promise<string> {
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 2048,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userContent }],
+  })
+  return response.content
+    .filter((block) => block.type === 'text')
+    .map((block) => block.text)
+    .join('')
+}
+
 export async function generateSiteCode(
   context: string,
   codeType: 'static' | 'nextjs',
