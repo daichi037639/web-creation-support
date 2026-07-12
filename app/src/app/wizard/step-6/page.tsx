@@ -65,7 +65,7 @@ export default function Step6Page() {
         why="STEP 1〜5で整理した情報をもとに、AIがサイトのコードを自動生成します。生成後も自然言語で修正指示を出せます。"
         onNext={generatedCode ? saveAndNext : undefined}
         nextLabel="公開手順へ"
-        prevHref="/wizard/step-5"
+        prevHref="/wizard/design"
       >
         <div className="rounded-xl bg-gray-50 p-4 text-sm text-gray-700">
           <p className="font-medium mb-1">生成形式：<span className="text-green-700">{codeType === 'nextjs' ? 'Next.js' : '静的HTML'}</span></p>

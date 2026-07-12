@@ -50,11 +50,23 @@ export async function completeText(
     .join('')
 }
 
+// デザイン設計書がある場合にsystemプロンプトへ追加するルール
+const DESIGN_RULES = `
+
+デザイン設計書が提供されている場合は、配色・フォント・ファーストビュー・写真の扱い・余白・レイアウト・セクション構成・ボタン/CTA・スマートフォン表示のすべてに設計書の方針を反映してください。
+その際、次のルールを厳守してください：
+- 参考サイトから抽象化したデザイン原則だけを利用する
+- 参考サイト固有の文章・ロゴ・画像・イラスト・コードは利用しない
+- 参考サイトのレイアウトを完全に再現しない
+- ユーザーの事業情報・要件を最優先する
+- 設計書とユーザー要件を組み合わせ、独自のサイトを作る`
+
 export async function generateSiteCode(
   context: string,
   codeType: 'static' | 'nextjs',
+  hasDesignBrief = false,
 ): Promise<ReadableStream<Uint8Array>> {
-  const systemPrompt =
+  const basePrompt =
     codeType === 'static'
       ? `あなたはWebサイトを生成するAIです。提供された事業情報をもとに、美しく実用的な静的HTMLサイトを生成してください。
 レスポンシブデザインを採用し、Tailwind CSS CDNを使用してください。
@@ -65,6 +77,6 @@ Tailwind CSSを使用し、TypeScriptで書いてください。
 
   return streamChat(
     [{ role: 'user', content: context }],
-    systemPrompt,
+    hasDesignBrief ? basePrompt + DESIGN_RULES : basePrompt,
   )
 }

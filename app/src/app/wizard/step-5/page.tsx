@@ -18,7 +18,7 @@ export default function Step5Page() {
 
   function save() {
     saveWizardState(markStepComplete(loadWizardState(), 5))
-    router.push('/wizard/step-6')
+    router.push('/wizard/design')
   }
 
   const canProceed = (step5.heroText ?? '').trim() !== ''

@@ -231,7 +231,7 @@ export function countAnsweredCards(
   return { answered, total: all.length }
 }
 
-function industryLabel(profile: BusinessProfile): string {
+export function industryLabel(profile: BusinessProfile): string {
   if (profile.industry === 'other' && profile.industryOther) return profile.industryOther
   return INDUSTRY_OPTIONS.find((o) => o.value === profile.industry)?.label ?? '未選択'
 }

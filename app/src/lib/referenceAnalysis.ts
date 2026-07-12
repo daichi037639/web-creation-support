@@ -1,4 +1,5 @@
 import type { DesignReferenceAnalysis } from '@/types/designReference'
+import { extractJson, asString, asStringArray } from '@/lib/json'
 
 export interface AnalysisResult {
   title: string
@@ -43,26 +44,13 @@ export function extractHtmlTitle(html: string): string {
   return match ? match[1].replace(/\s+/g, ' ').trim() : ''
 }
 
-// Claudeの応答からJSONを取り出す。コードフェンス付き・前後に説明文が
-// 混ざるケースがあるため、最初の { から最後の } までを対象にする
 export function parseAnalysisJson(text: string): AnalysisResult | null {
-  const start = text.indexOf('{')
-  const end = text.lastIndexOf('}')
-  if (start === -1 || end <= start) return null
-
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(text.slice(start, end + 1))
-  } catch {
+  const parsed = extractJson(text)
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
     return null
   }
-  if (typeof parsed !== 'object' || parsed === null) return null
   const obj = parsed as Record<string, unknown>
   const analysis = (obj.analysis ?? {}) as Record<string, unknown>
-
-  const asString = (v: unknown): string => (typeof v === 'string' ? v : '')
-  const asStringArray = (v: unknown): string[] =>
-    Array.isArray(v) ? v.filter((s): s is string => typeof s === 'string') : []
 
   const result: AnalysisResult = {
     title: asString(obj.title),
