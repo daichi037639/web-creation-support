@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 import { AiChatOverlay } from '@/components/wizard/AiChatOverlay'
+import { AnswerStatusPanel } from '@/components/wizard/AnswerStatusPanel'
 import { SaveIndicator } from '@/components/wizard/SaveIndicator'
 import { WizardProgress } from '@/components/wizard/WizardProgress'
 import { countAnsweredCards } from '@/lib/questions'
@@ -37,7 +38,8 @@ export default function WizardLayout({ children }: { children: React.ReactNode }
         completedSteps={completedSteps}
         cardProgress={cardProgress}
       />
-      <div className="px-4 pt-2">
+      <div className="flex items-center justify-between px-4 pt-2">
+        <AnswerStatusPanel />
         <SaveIndicator />
       </div>
       <div className="flex-1">{children}</div>

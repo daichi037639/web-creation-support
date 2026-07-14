@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useRef } from 'react'
 import { StepLayout } from '@/components/wizard/StepLayout'
+import { PreGenerationCheck } from '@/components/wizard/PreGenerationCheck'
 import { Button } from '@/components/ui/Button'
 import { loadWizardState, saveWizardState, updateStepAnswers, markStepComplete } from '@/lib/storage'
 import { useWizardState } from '@/lib/useWizardState'
@@ -74,6 +75,8 @@ export default function Step6Page() {
               : 'シンプルなサイトのため、静的HTMLで生成します。管理がかんたんです'}
           </p>
         </div>
+
+        <PreGenerationCheck answers={answers} />
 
         <Button onClick={generate} disabled={generating} className="w-full py-3">
           {generating ? '生成中...' : generatedCode ? '再生成する' : 'サイトを生成する'}
