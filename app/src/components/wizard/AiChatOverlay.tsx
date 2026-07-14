@@ -1,43 +1,61 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { TextArea } from '@/components/ui/TextArea'
 import { ChatMessage } from '@/lib/claude'
+import { loadChatMessages, saveChatMessages, clearChatMessages } from '@/lib/chatStorage'
+import { subscribeConsult } from '@/lib/consultBus'
+import { useWizardState } from '@/lib/useWizardState'
 
-/** id を変えて渡すたびに、そのトピックでチャットが開いて相談が始まる */
-export interface ConsultRequest {
-  id: number
-  topic: string
-}
+/** パスごとの「いまユーザーが何をしているか」。回答内容はAPI側でsystemプロンプトに注入される */
+const STEP_CONTEXTS: [RegExp, string][] = [
+  [/step-1/, 'ユーザーは今、事業・商品の棚卸しステップにいます。事業名・商品・強み・歴史をカード形式で整理しようとしています。'],
+  [/step-2/, 'ユーザーは今、ターゲット顧客を整理するステップにいます。誰に届けたいか、その人の悩みや願望を言葉にしようとしています。'],
+  [/step-3/, 'ユーザーは今、サイトで一番伝えたいメッセージとトーンを決めるステップにいます。'],
+  [/step-4/, 'ユーザーは今、Webサイトのページ構成と必要な機能を決めるステップにいます。'],
+  [/step-5/, 'ユーザーは今、Webサイトに載せるコンテンツ（文章・写真）を準備するステップにいます。'],
+  [/design/, 'ユーザーは今、生成するサイトのデザインの方向性を選ぶステップにいます。デザインの違いや選び方について初心者向けに助言してください。'],
+  [/step-6/, 'ユーザーは今、AIにサイトを生成させるステップにいます。生成されたサイトへの修正要望や疑問に答えてください。'],
+  [/step-7/, 'ユーザーは今、完成したサイトをGitHubとVercelで公開するステップにいます。手順の疑問に答えてください。'],
+]
 
-interface AiChatOverlayProps {
-  systemContext: string
-  consultRequest?: ConsultRequest | null
-}
-
-export function AiChatOverlay({ systemContext, consultRequest }: AiChatOverlayProps) {
+export function AiChatOverlay() {
+  const pathname = usePathname()
+  const { answers } = useWizardState()
   const [open, setOpen] = useState(false)
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  // サーバーでは空、クライアントでは保存済み履歴から始める。
+  // チャットは初期状態で閉じており履歴はDOMに出ないため、ハイドレーション差分は起きない
+  const [messages, setMessages] = useState<ChatMessage[]>(() => loadChatMessages())
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const handledConsultId = useRef(0)
+
+  const stepContext =
+    STEP_CONTEXTS.find(([pattern]) => pattern.test(pathname))?.[1] ??
+    'ユーザーはWebサイト制作ウィザードを進めています。'
+
+  // ストリーミング中の書き込み連発を避け、応答が確定したタイミングで保存する
+  useEffect(() => {
+    if (!loading) saveChatMessages(messages)
+  }, [messages, loading])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // 再レンダーごとにリスナーを張り替えず、常に最新のsendMessageを呼ぶためのref
+  const sendRef = useRef<(text: string) => void>(() => {})
   useEffect(() => {
-    if (!consultRequest || consultRequest.id === handledConsultId.current) return
-    handledConsultId.current = consultRequest.id
-    setOpen(true)
-    sendMessage(
-      `「${consultRequest.topic}」という質問にうまく答えられません。一緒に考えてもらえますか？`,
-    )
-    // sendMessage は毎レンダーで再生成されるため deps に含めず、id の重複ガードで多重送信を防ぐ
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [consultRequest])
+    sendRef.current = sendMessage
+  })
+  useEffect(() => {
+    return subscribeConsult(({ topic }) => {
+      setOpen(true)
+      sendRef.current(`「${topic}」という質問にうまく答えられません。一緒に考えてもらえますか？`)
+    })
+  }, [])
 
   async function sendMessage(text: string) {
     if (!text.trim() || loading) return
@@ -50,7 +68,7 @@ export function AiChatOverlay({ systemContext, consultRequest }: AiChatOverlayPr
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: next, systemContext }),
+      body: JSON.stringify({ messages: next, answers, stepContext }),
     })
 
     if (!res.body) { setLoading(false); return }
@@ -73,6 +91,11 @@ export function AiChatOverlay({ systemContext, consultRequest }: AiChatOverlayPr
     setLoading(false)
   }
 
+  function clearHistory() {
+    setMessages([])
+    clearChatMessages()
+  }
+
   return (
     <>
       <button
@@ -88,13 +111,27 @@ export function AiChatOverlay({ systemContext, consultRequest }: AiChatOverlayPr
           <div className="flex h-[70vh] w-full max-w-sm flex-col rounded-2xl bg-white shadow-2xl ring-1 ring-gray-200">
             <div className="flex items-center justify-between border-b px-4 py-3">
               <h2 className="text-sm font-semibold text-gray-900">AIに相談する</h2>
-              <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+              <div className="flex items-center gap-3">
+                {messages.length > 0 && (
+                  <button
+                    onClick={clearHistory}
+                    className="text-[11px] text-gray-400 hover:text-gray-600"
+                  >
+                    履歴を消す
+                  </button>
+                )}
+                <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
               {messages.length === 0 && (
                 <p className="text-center text-sm text-gray-400 mt-8">
                   わからないことを<br />自由に聞いてください
+                  <br />
+                  <span className="mt-2 block text-xs text-gray-300">
+                    これまでの回答を踏まえてお答えします
+                  </span>
                 </p>
               )}
               {messages.map((m, i) => (

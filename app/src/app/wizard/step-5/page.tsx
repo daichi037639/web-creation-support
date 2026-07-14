@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation'
 import { StepLayout } from '@/components/wizard/StepLayout'
-import { AiChatOverlay } from '@/components/wizard/AiChatOverlay'
 import { TextArea } from '@/components/ui/TextArea'
 import { loadWizardState, saveWizardState, updateStepAnswers, markStepComplete } from '@/lib/storage'
 import { useWizardState } from '@/lib/useWizardState'
@@ -63,7 +62,6 @@ export default function Step5Page() {
           </p>
         )}
       </StepLayout>
-      <AiChatOverlay systemContext="ユーザーは今、Webサイトに載せるコンテンツ（文章・写真）を準備するステップにいます。文章の書き方に迷っている可能性があります。" />
     </>
   )
 }

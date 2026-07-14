@@ -22,7 +22,6 @@ export default function Step3Page() {
       why="サイトを訪れた人が最初の数秒で「自分向けだ」と感じられるかどうかが勝負です。一番伝えたいことを一言で言えるようにしましょう。"
       prevHref="/wizard/step-2"
       nextHref="/wizard/step-4"
-      chatContext="ユーザーは今、サイトで一番伝えたいメッセージとトーンを決めるステップにいます。答えに詰まっていたら、これまでの回答を活かした例文を提案しながら一緒に考えてください。"
       bottomExtra={
         <ChipSelect
           label="サイトの雰囲気・トーンはどれに近いですか？"

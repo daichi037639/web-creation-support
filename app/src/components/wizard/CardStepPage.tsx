@@ -3,9 +3,9 @@
 import { useRouter } from 'next/navigation'
 import { ReactNode, useState } from 'react'
 import { StepLayout } from '@/components/wizard/StepLayout'
-import { AiChatOverlay, ConsultRequest } from '@/components/wizard/AiChatOverlay'
 import { QuestionCard } from '@/components/wizard/QuestionCard'
 import { StepClearOverlay } from '@/components/wizard/StepClearOverlay'
+import { requestConsult } from '@/lib/consultBus'
 import { getQuestionsFor } from '@/lib/questions'
 import {
   loadWizardState,
@@ -28,7 +28,6 @@ interface CardStepPageProps {
   why: string
   prevHref: string
   nextHref: string
-  chatContext: string
   /** カードリストの上に置く追加UI。業態・業界（STEP 1）は質問の出し分けと連動するため render prop で渡す */
   topExtra?: (control: ProfileControl) => ReactNode
   bottomExtra?: ReactNode
@@ -40,13 +39,11 @@ export function CardStepPage({
   why,
   prevHref,
   nextHref,
-  chatContext,
   topExtra,
   bottomExtra,
 }: CardStepPageProps) {
   const router = useRouter()
   const { answers } = useWizardState()
-  const [consult, setConsult] = useState<ConsultRequest | null>(null)
   const [cleared, setCleared] = useState(false)
 
   const profile = answers.profile ?? {}
@@ -93,7 +90,7 @@ export function CardStepPage({
             question={q}
             answer={cards[q.id]}
             onChange={(answer) => handleCardChange(q.id, answer)}
-            onConsult={() => setConsult({ id: Date.now(), topic: q.label })}
+            onConsult={() => requestConsult(q.label)}
           />
         ))}
 
@@ -101,7 +98,6 @@ export function CardStepPage({
       </StepLayout>
 
       {cleared && <StepClearOverlay stepId={stepId} onDone={() => router.push(nextHref)} />}
-      <AiChatOverlay systemContext={chatContext} consultRequest={consult} />
     </>
   )
 }

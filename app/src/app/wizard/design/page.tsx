@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { StepLayout } from '@/components/wizard/StepLayout'
-import { AiChatOverlay } from '@/components/wizard/AiChatOverlay'
 import { Button } from '@/components/ui/Button'
 import { loadWizardState, saveWizardState, updateStepAnswers } from '@/lib/storage'
 import { useWizardState } from '@/lib/useWizardState'
@@ -153,7 +152,6 @@ export default function DesignPage() {
           </>
         )}
       </StepLayout>
-      <AiChatOverlay systemContext="ユーザーは今、生成するサイトのデザインの方向性を選ぶステップにいます。デザインの違いや選び方について初心者向けに助言してください。" />
     </>
   )
 }

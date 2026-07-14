@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation'
 import { StepLayout } from '@/components/wizard/StepLayout'
-import { AiChatOverlay } from '@/components/wizard/AiChatOverlay'
 import { ChipSelect } from '@/components/ui/ChipSelect'
 import { loadWizardState, saveWizardState, updateStepAnswers, markStepComplete } from '@/lib/storage'
 import { useWizardState } from '@/lib/useWizardState'
@@ -92,7 +91,6 @@ export default function Step4Page() {
           )}
         </div>
       </StepLayout>
-      <AiChatOverlay systemContext="ユーザーは今、Webサイトのページ構成と必要な機能を決めるステップにいます。" />
     </>
   )
 }

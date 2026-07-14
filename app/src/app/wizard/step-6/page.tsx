@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation'
 import { useState, useRef } from 'react'
 import { StepLayout } from '@/components/wizard/StepLayout'
-import { AiChatOverlay } from '@/components/wizard/AiChatOverlay'
 import { Button } from '@/components/ui/Button'
 import { loadWizardState, saveWizardState, updateStepAnswers, markStepComplete } from '@/lib/storage'
 import { useWizardState } from '@/lib/useWizardState'
@@ -111,7 +110,6 @@ export default function Step6Page() {
           </div>
         )}
       </StepLayout>
-      <AiChatOverlay systemContext="ユーザーは今、AIにサイトを生成させるステップにいます。生成されたサイトへの修正要望や疑問に答えてください。" />
     </>
   )
 }

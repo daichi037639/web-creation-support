@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { AiChatOverlay } from '@/components/wizard/AiChatOverlay'
 import { WizardProgress } from '@/components/wizard/WizardProgress'
 import { countAnsweredCards } from '@/lib/questions'
 import { useWizardState } from '@/lib/useWizardState'
@@ -26,6 +27,8 @@ export default function WizardLayout({ children }: { children: React.ReactNode }
         cardProgress={cardProgress}
       />
       <div className="flex-1">{children}</div>
+      {/* チャットはウィザード全体で1つ。ステップ間を移動しても会話が途切れない */}
+      <AiChatOverlay />
     </div>
   )
 }

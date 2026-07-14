@@ -14,7 +14,6 @@ export default function Step1Page() {
       why="あなたの事業の「何が」「なぜ」すばらしいのかを言葉にすることが、サイト全体の骨格になります。まずここを固めましょう。"
       prevHref="/"
       nextHref="/wizard/step-2"
-      chatContext="ユーザーは今、事業・商品の棚卸しステップにいます。事業名・商品・強み・歴史をカード形式で整理しようとしています。答えに詰まった質問があれば、具体例を示しながら一緒に言語化を手伝ってください。"
       topExtra={({ profile, onProfileChange }) => (
         <section className="flex flex-col gap-4 rounded-xl bg-green-50/70 p-4 ring-1 ring-green-100">
           <p className="text-sm font-semibold text-green-800">
