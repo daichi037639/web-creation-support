@@ -74,10 +74,11 @@ export function loadWizardState(): WizardState {
 /** 保存を画面（進捗メーターなど）へ即時反映させるための通知イベント */
 export const WIZARD_STATE_EVENT = 'wizard-state-changed'
 
-export function saveWizardState(state: WizardState): void {
+/** notify: false はページ位置の記録などの内部的な保存用。「✓ 保存しました」表示を出さない */
+export function saveWizardState(state: WizardState, { notify = true } = {}): void {
   if (typeof window === 'undefined') return
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  window.dispatchEvent(new Event(WIZARD_STATE_EVENT))
+  if (notify) window.dispatchEvent(new Event(WIZARD_STATE_EVENT))
 }
 
 export function updateStepAnswers(

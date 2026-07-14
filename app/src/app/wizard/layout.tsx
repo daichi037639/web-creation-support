@@ -25,7 +25,7 @@ export default function WizardLayout({ children }: { children: React.ReactNode }
   useEffect(() => {
     const state = loadWizardState()
     if (state.lastPath !== pathname) {
-      saveWizardState({ ...state, lastPath: pathname, currentStep })
+      saveWizardState({ ...state, lastPath: pathname, currentStep }, { notify: false })
     }
   }, [pathname, currentStep])
 
