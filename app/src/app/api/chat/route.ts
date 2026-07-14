@@ -6,10 +6,11 @@ import { WizardAnswers } from '@/types/wizard'
 export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
-  const { messages, answers, stepContext } = (await req.json()) as {
+  const { messages, answers, stepContext, interviewMode } = (await req.json()) as {
     messages: ChatMessage[]
     answers?: WizardAnswers
     stepContext?: string
+    interviewMode?: boolean
   }
 
   const profile = answers?.profile ?? {}
@@ -38,7 +39,23 @@ ${buildPlanningContext(answers ?? {})}
 質問カードの一覧：
 ${describeCards(profile)}`
 
-  const stream = await streamChatWithCardTool(messages, systemPrompt, tool)
+  const interviewPrompt = `
+
+【インタビューモード】
+いまはあなたが聞き手です。回答状況で「未定」になっている質問の中から、この事業者が
+答えやすそうなものを1つ選び、具体例を添えてやさしく質問してください。ルール：
+- 質問は必ず1回に1つだけ
+- ユーザーの答えを受け取ったら propose_card_updates でカードへの記入を提案し、
+  ひとこと感想や励ましを添えて、次の質問へ進む
+- 答えにくそうにしていたら、別の切り口の例を出すか、その質問を後回しにして次へ進む
+- すべての質問が埋まったら、お礼を伝えて、ヘッダーの「入力状況を見る」から
+  内容を確認・修正できることを案内して締めくくる`
+
+  const stream = await streamChatWithCardTool(
+    messages,
+    interviewMode ? systemPrompt + interviewPrompt : systemPrompt,
+    tool,
+  )
   return new Response(stream, {
     headers: { 'Content-Type': 'application/x-ndjson; charset=utf-8' },
   })

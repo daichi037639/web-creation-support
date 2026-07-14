@@ -31,6 +31,8 @@ const STEP_CONTEXTS: [RegExp, string][] = [
 
 type StreamEvent = { type: 'text'; text: string } | { type: 'updates'; updates: CardUpdate[] }
 
+const INTERVIEW_KEY = 'wizard_interview'
+
 export function AiChatOverlay() {
   const pathname = usePathname()
   const { answers } = useWizardState()
@@ -38,6 +40,9 @@ export function AiChatOverlay() {
   // サーバーでは空、クライアントでは保存済み履歴から始める。
   // チャットは初期状態で閉じており履歴はDOMに出ないため、ハイドレーション差分は起きない
   const [messages, setMessages] = useState<StoredChatMessage[]>(() => loadChatMessages())
+  const [interview, setInterview] = useState(
+    () => typeof window !== 'undefined' && localStorage.getItem(INTERVIEW_KEY) === '1',
+  )
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -101,7 +106,7 @@ export function AiChatOverlay() {
     }
   }
 
-  async function sendMessage(text: string) {
+  async function sendMessage(text: string, interviewMode = interview) {
     if (!text.trim() || loading) return
     const userMsg: StoredChatMessage = { role: 'user', content: text.trim() }
     const next = [...messages, userMsg]
@@ -117,6 +122,7 @@ export function AiChatOverlay() {
         messages: next.map(({ role, content }) => ({ role, content })),
         answers,
         stepContext,
+        interviewMode,
       }),
     })
 
@@ -168,9 +174,21 @@ export function AiChatOverlay() {
     )
   }
 
+  function startInterview() {
+    setInterview(true)
+    localStorage.setItem(INTERVIEW_KEY, '1')
+    sendMessage('AIインタビューをお願いします。質問に1つずつ答えていきます。', true)
+  }
+
+  function stopInterview() {
+    setInterview(false)
+    localStorage.removeItem(INTERVIEW_KEY)
+  }
+
   function clearHistory() {
     setMessages([])
     clearChatMessages()
+    stopInterview()
   }
 
   return (
@@ -187,8 +205,23 @@ export function AiChatOverlay() {
         <div className="fixed inset-0 z-50 flex items-end justify-end p-4 sm:items-center sm:justify-end">
           <div className="flex h-[70vh] w-full max-w-sm flex-col rounded-2xl bg-white shadow-2xl ring-1 ring-gray-200">
             <div className="flex items-center justify-between border-b px-4 py-3">
-              <h2 className="text-sm font-semibold text-gray-900">AIに相談する</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold text-gray-900">AIに相談する</h2>
+                {interview && (
+                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700">
+                    🎙 インタビュー中
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-3">
+                {interview && (
+                  <button
+                    onClick={stopInterview}
+                    className="text-[11px] text-gray-400 hover:text-gray-600"
+                  >
+                    ｲﾝﾀﾋﾞｭｰ終了
+                  </button>
+                )}
                 {messages.length > 0 && (
                   <button
                     onClick={clearHistory}
@@ -203,13 +236,24 @@ export function AiChatOverlay() {
 
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
               {messages.length === 0 && (
-                <p className="text-center text-sm text-gray-400 mt-8">
-                  わからないことを<br />自由に聞いてください
-                  <br />
-                  <span className="mt-2 block text-xs text-gray-300">
-                    これまでの回答を踏まえてお答えします
-                  </span>
-                </p>
+                <div className="mt-8 flex flex-col items-center gap-4">
+                  <p className="text-center text-sm text-gray-400">
+                    わからないことを<br />自由に聞いてください
+                    <br />
+                    <span className="mt-2 block text-xs text-gray-300">
+                      これまでの回答を踏まえてお答えします
+                    </span>
+                  </p>
+                  <button
+                    onClick={startInterview}
+                    className="rounded-xl border border-green-300 bg-green-50 px-4 py-3 text-sm font-medium text-green-800 hover:bg-green-100"
+                  >
+                    🎙 AIインタビューで進める
+                    <span className="block text-[11px] font-normal text-green-700">
+                      AIの質問に答えるだけで、カードが埋まっていきます
+                    </span>
+                  </button>
+                </div>
               )}
               {messages.map((m, i) => (
                 <div key={i} className="space-y-2">
