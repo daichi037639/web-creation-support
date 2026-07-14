@@ -1,19 +1,31 @@
-import type { ChatMessage } from '@/lib/claude'
+/** AIが提案したカード記入。ユーザーが「反映」を押すまでカードには書き込まない */
+export interface CardProposal {
+  id: string
+  title: string
+  value: string
+  applied: boolean
+}
+
+export interface StoredChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+  proposals?: CardProposal[]
+}
 
 const CHAT_KEY = 'wizard_chat'
 
 /** ステップを移動したり離脱しても会話を続けられるよう、履歴をlocalStorageに残す */
-export function loadChatMessages(): ChatMessage[] {
+export function loadChatMessages(): StoredChatMessage[] {
   if (typeof window === 'undefined') return []
   try {
     const stored = localStorage.getItem(CHAT_KEY)
-    return stored ? (JSON.parse(stored) as ChatMessage[]) : []
+    return stored ? (JSON.parse(stored) as StoredChatMessage[]) : []
   } catch {
     return []
   }
 }
 
-export function saveChatMessages(messages: ChatMessage[]): void {
+export function saveChatMessages(messages: StoredChatMessage[]): void {
   if (typeof window === 'undefined') return
   localStorage.setItem(CHAT_KEY, JSON.stringify(messages))
 }

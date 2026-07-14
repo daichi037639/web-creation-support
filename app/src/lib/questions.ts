@@ -208,11 +208,16 @@ export function getQuestionsFor(step: 1 | 2 | 3, profile: BusinessProfile): Reso
   )
 }
 
+/** STEP 1〜3 の全質問カード（プロファイルによる出し分け適用済み） */
+export function getAllQuestions(profile: BusinessProfile): ResolvedQuestion[] {
+  return ([1, 2, 3] as const).flatMap((s) => getQuestionsFor(s, profile))
+}
+
 export function countAnsweredCards(
   profile: BusinessProfile,
   cards: Record<string, CardAnswer>,
 ): { answered: number; total: number } {
-  const all = ([1, 2, 3] as const).flatMap((s) => getQuestionsFor(s, profile))
+  const all = getAllQuestions(profile)
   const answered = all.filter((q) => cards[q.id]?.status === 'answered').length
   return { answered, total: all.length }
 }

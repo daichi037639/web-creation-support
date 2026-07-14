@@ -1,12 +1,20 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { TextArea } from '@/components/ui/TextArea'
-import { ChatMessage } from '@/lib/claude'
-import { loadChatMessages, saveChatMessages, clearChatMessages } from '@/lib/chatStorage'
+import type { CardUpdate } from '@/lib/claude'
+import {
+  CardProposal,
+  StoredChatMessage,
+  loadChatMessages,
+  saveChatMessages,
+  clearChatMessages,
+} from '@/lib/chatStorage'
 import { subscribeConsult } from '@/lib/consultBus'
+import { getAllQuestions } from '@/lib/questions'
+import { loadWizardState, saveWizardState, updateCards } from '@/lib/storage'
 import { useWizardState } from '@/lib/useWizardState'
 
 /** パスごとの「いまユーザーが何をしているか」。回答内容はAPI側でsystemプロンプトに注入される */
@@ -21,13 +29,15 @@ const STEP_CONTEXTS: [RegExp, string][] = [
   [/step-7/, 'ユーザーは今、完成したサイトをGitHubとVercelで公開するステップにいます。手順の疑問に答えてください。'],
 ]
 
+type StreamEvent = { type: 'text'; text: string } | { type: 'updates'; updates: CardUpdate[] }
+
 export function AiChatOverlay() {
   const pathname = usePathname()
   const { answers } = useWizardState()
   const [open, setOpen] = useState(false)
   // サーバーでは空、クライアントでは保存済み履歴から始める。
   // チャットは初期状態で閉じており履歴はDOMに出ないため、ハイドレーション差分は起きない
-  const [messages, setMessages] = useState<ChatMessage[]>(() => loadChatMessages())
+  const [messages, setMessages] = useState<StoredChatMessage[]>(() => loadChatMessages())
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -35,6 +45,12 @@ export function AiChatOverlay() {
   const stepContext =
     STEP_CONTEXTS.find(([pattern]) => pattern.test(pathname))?.[1] ??
     'ユーザーはWebサイト制作ウィザードを進めています。'
+
+  const questionTitles = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const q of getAllQuestions(answers.profile ?? {})) map.set(q.id, q.title)
+    return map
+  }, [answers.profile])
 
   // ストリーミング中の書き込み連発を避け、応答が確定したタイミングで保存する
   useEffect(() => {
@@ -57,9 +73,37 @@ export function AiChatOverlay() {
     })
   }, [])
 
+  function handleEvent(event: StreamEvent, assistantText: { value: string }) {
+    if (event.type === 'text') {
+      assistantText.value += event.text
+      const text = assistantText.value
+      setMessages((prev) => {
+        const updated = [...prev]
+        updated[updated.length - 1] = { ...updated[updated.length - 1], content: text }
+        return updated
+      })
+    } else if (event.type === 'updates') {
+      const proposals: CardProposal[] = event.updates.map((u) => ({
+        id: u.id,
+        title: questionTitles.get(u.id) ?? u.id,
+        value: u.value,
+        applied: false,
+      }))
+      setMessages((prev) => {
+        const updated = [...prev]
+        const last = updated[updated.length - 1]
+        updated[updated.length - 1] = {
+          ...last,
+          proposals: [...(last.proposals ?? []), ...proposals],
+        }
+        return updated
+      })
+    }
+  }
+
   async function sendMessage(text: string) {
     if (!text.trim() || loading) return
-    const userMsg: ChatMessage = { role: 'user', content: text.trim() }
+    const userMsg: StoredChatMessage = { role: 'user', content: text.trim() }
     const next = [...messages, userMsg]
     setMessages(next)
     setInput('')
@@ -68,27 +112,60 @@ export function AiChatOverlay() {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: next, answers, stepContext }),
+      body: JSON.stringify({
+        // 提案などの表示用データはAPIへ送らない（Claudeにはテキストの会話だけを渡す）
+        messages: next.map(({ role, content }) => ({ role, content })),
+        answers,
+        stepContext,
+      }),
     })
 
     if (!res.body) { setLoading(false); return }
 
     const reader = res.body.getReader()
     const decoder = new TextDecoder()
-    let assistantText = ''
+    const assistantText = { value: '' }
+    let buffer = ''
     setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
 
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
-      assistantText += decoder.decode(value, { stream: true })
-      setMessages((prev) => {
-        const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', content: assistantText }
-        return updated
-      })
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() ?? ''
+      for (const line of lines) {
+        if (!line.trim()) continue
+        try {
+          handleEvent(JSON.parse(line) as StreamEvent, assistantText)
+        } catch {
+          // 不完全な行はスキップ（次のチャンクで補完される）
+        }
+      }
     }
     setLoading(false)
+  }
+
+  function applyProposal(messageIndex: number, proposalIndex: number) {
+    const proposal = messages[messageIndex]?.proposals?.[proposalIndex]
+    if (!proposal || proposal.applied) return
+    saveWizardState(
+      updateCards(loadWizardState(), {
+        [proposal.id]: { value: proposal.value, status: 'answered' },
+      }),
+    )
+    setMessages((prev) =>
+      prev.map((m, i) =>
+        i === messageIndex
+          ? {
+              ...m,
+              proposals: m.proposals?.map((p, j) =>
+                j === proposalIndex ? { ...p, applied: true } : p,
+              ),
+            }
+          : m,
+      ),
+    )
   }
 
   function clearHistory() {
@@ -135,10 +212,32 @@ export function AiChatOverlay() {
                 </p>
               )}
               {messages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap ${m.role === 'user' ? 'bg-green-700 text-white' : 'bg-gray-100 text-gray-900'}`}>
-                    {m.content}
+                <div key={i} className="space-y-2">
+                  <div className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    {m.content && (
+                      <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap ${m.role === 'user' ? 'bg-green-700 text-white' : 'bg-gray-100 text-gray-900'}`}>
+                        {m.content}
+                      </div>
+                    )}
                   </div>
+                  {m.proposals && m.proposals.length > 0 && (
+                    <div className="rounded-xl border border-green-200 bg-green-50 p-3 space-y-2">
+                      <p className="text-xs font-semibold text-green-800">✏️ カードへの記入の提案</p>
+                      {m.proposals.map((p, j) => (
+                        <div key={j} className="rounded-lg bg-white p-2.5 ring-1 ring-green-100">
+                          <p className="text-[11px] font-medium text-gray-500">{p.title}</p>
+                          <p className="text-sm text-gray-800 whitespace-pre-wrap">{p.value}</p>
+                          <button
+                            onClick={() => applyProposal(i, j)}
+                            disabled={p.applied}
+                            className={`mt-1.5 text-xs font-medium ${p.applied ? 'text-gray-400' : 'text-green-700 hover:text-green-900'}`}
+                          >
+                            {p.applied ? '✓ 反映しました' : 'カードに反映する'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
               <div ref={bottomRef} />

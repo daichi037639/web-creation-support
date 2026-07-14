@@ -7,6 +7,70 @@ export interface ChatMessage {
   content: string
 }
 
+/** チャット・一括入力からカードへ書き込む提案。id は質問バンクの質問ID */
+export interface CardUpdate {
+  id: string
+  value: string
+}
+
+/**
+ * NDJSONで返すチャットストリーム。1行 = 1イベント：
+ * {type:'text', text} … 本文の差分 / {type:'updates', updates} … カード記入の提案
+ */
+export async function streamChatWithCardTool(
+  messages: ChatMessage[],
+  systemPrompt: string,
+  tool: Anthropic.Tool,
+): Promise<ReadableStream<Uint8Array>> {
+  const stream = client.messages.stream({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 2048,
+    system: systemPrompt,
+    messages,
+    tools: [tool],
+  })
+
+  const encoder = new TextEncoder()
+  return new ReadableStream({
+    async start(controller) {
+      const emit = (event: object) =>
+        controller.enqueue(encoder.encode(JSON.stringify(event) + '\n'))
+      for await (const chunk of stream) {
+        if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+          emit({ type: 'text', text: chunk.delta.text })
+        }
+      }
+      // tool入力（JSON）は差分では扱いにくいため、完成したメッセージからまとめて取り出す
+      const final = await stream.finalMessage()
+      for (const block of final.content) {
+        if (block.type === 'tool_use' && block.name === tool.name) {
+          const input = block.input as { updates?: CardUpdate[] }
+          if (input.updates?.length) emit({ type: 'updates', updates: input.updates })
+        }
+      }
+      controller.close()
+    },
+  })
+}
+
+/** tool_choice で1つのツールを強制し、その入力JSONだけを返す（structured output） */
+export async function completeWithTool<T>(
+  userContent: string,
+  systemPrompt: string,
+  tool: Anthropic.Tool,
+): Promise<T | null> {
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 4096,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userContent }],
+    tools: [tool],
+    tool_choice: { type: 'tool', name: tool.name },
+  })
+  const block = response.content.find((b) => b.type === 'tool_use')
+  return block && block.type === 'tool_use' ? (block.input as T) : null
+}
+
 export async function streamChat(
   messages: ChatMessage[],
   systemPrompt: string,
