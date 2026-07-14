@@ -53,9 +53,10 @@ export async function streamChatWithCardTool(
   })
 }
 
-/** tool_choice で1つのツールを強制し、その入力JSONだけを返す（structured output） */
+/** tool_choice で1つのツールを強制し、その入力JSONだけを返す（structured output）。
+ * userContent にはテキストのほか、画像を含むコンテンツブロック配列も渡せる */
 export async function completeWithTool<T>(
-  userContent: string,
+  userContent: string | Anthropic.ContentBlockParam[],
   systemPrompt: string,
   tool: Anthropic.Tool,
 ): Promise<T | null> {
