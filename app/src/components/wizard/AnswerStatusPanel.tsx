@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { getQuestionsFor } from '@/lib/questions'
+import { pushSession } from '@/lib/sessionSync'
 import { useWizardState } from '@/lib/useWizardState'
 import { STEPS } from '@/types/wizard'
 
@@ -12,9 +13,20 @@ import { STEPS } from '@/types/wizard'
  */
 export function AnswerStatusPanel() {
   const [open, setOpen] = useState(false)
+  const [handover, setHandover] = useState<{ url?: string; error?: string; busy?: boolean }>({})
   const { answers } = useWizardState()
   const profile = answers.profile ?? {}
   const cards = answers.cards ?? {}
+
+  async function createHandoverLink() {
+    setHandover({ busy: true })
+    try {
+      const sessionId = await pushSession(true)
+      setHandover({ url: `${window.location.origin}/resume/${sessionId}` })
+    } catch (e) {
+      setHandover({ error: e instanceof Error ? e.message : '引き継ぎに失敗しました' })
+    }
+  }
 
   return (
     <>
@@ -80,6 +92,45 @@ export function AnswerStatusPanel() {
                   </div>
                 )
               })}
+            </div>
+
+            <div className="border-t px-4 py-3">
+              {!handover.url && (
+                <button
+                  onClick={createHandoverLink}
+                  disabled={handover.busy}
+                  className="text-xs font-medium text-green-700 hover:text-green-900 disabled:opacity-50"
+                >
+                  {handover.busy ? '引き継ぎリンクを作成中…' : '📱 別の端末に引き継ぐ'}
+                </button>
+              )}
+              {handover.url && (
+                <div className="flex flex-col gap-1.5">
+                  <p className="text-xs font-medium text-gray-700">
+                    このリンクを別の端末で開くと、続きから始められます
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      readOnly
+                      value={handover.url}
+                      className="min-w-0 flex-1 rounded-lg bg-gray-50 px-2 py-1.5 text-[11px] text-gray-600 ring-1 ring-gray-200"
+                      onFocus={(e) => e.target.select()}
+                    />
+                    <button
+                      onClick={() => navigator.clipboard.writeText(handover.url!)}
+                      className="shrink-0 rounded-lg bg-green-700 px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-green-800"
+                    >
+                      コピー
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-gray-400">
+                    ※ リンクを知っている人は誰でも開けます。他人に教えないでください
+                  </p>
+                </div>
+              )}
+              {handover.error && (
+                <p className="mt-1 text-[11px] text-amber-700">{handover.error}</p>
+              )}
             </div>
           </div>
         </div>

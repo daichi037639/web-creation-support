@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { AiChatOverlay } from '@/components/wizard/AiChatOverlay'
 import { AnswerStatusPanel } from '@/components/wizard/AnswerStatusPanel'
 import { SaveIndicator } from '@/components/wizard/SaveIndicator'
+import { SessionSync } from '@/components/wizard/SessionSync'
 import { WizardProgress } from '@/components/wizard/WizardProgress'
 import { countAnsweredCards } from '@/lib/questions'
 import { loadWizardState, saveWizardState } from '@/lib/storage'
@@ -45,6 +46,7 @@ export default function WizardLayout({ children }: { children: React.ReactNode }
       <div className="flex-1">{children}</div>
       {/* チャットはウィザード全体で1つ。ステップ間を移動しても会話が途切れない */}
       <AiChatOverlay />
+      <SessionSync />
     </div>
   )
 }
