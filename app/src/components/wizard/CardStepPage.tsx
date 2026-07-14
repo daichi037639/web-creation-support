@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { ReactNode, useState } from 'react'
 import { StepLayout } from '@/components/wizard/StepLayout'
+import { BulkTalkPanel } from '@/components/wizard/BulkTalkPanel'
 import { QuestionCard } from '@/components/wizard/QuestionCard'
 import { StepClearOverlay } from '@/components/wizard/StepClearOverlay'
 import { requestConsult } from '@/lib/consultBus'
@@ -76,6 +77,8 @@ export function CardStepPage({
         prevHref={prevHref}
       >
         {topExtra?.({ profile, onProfileChange: handleProfileChange })}
+
+        <BulkTalkPanel profile={profile} cards={cards} />
 
         <p className="text-xs font-medium text-gray-500">
           🃏 カード {answeredCount} / {questions.length} 枚
