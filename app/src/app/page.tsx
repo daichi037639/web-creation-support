@@ -1,6 +1,5 @@
-import Link from 'next/link'
 import { STEPS } from '@/types/wizard'
-import { Button } from '@/components/ui/Button'
+import { StartOrResume } from '@/components/StartOrResume'
 
 const wizardSteps = STEPS.filter((s) => s.id > 0)
 
@@ -36,12 +35,7 @@ export default function HomePage() {
         </ol>
       </section>
 
-      <div className="flex flex-col items-center gap-3">
-        <Link href="/wizard/step-1">
-          <Button className="px-10 py-3 text-base">はじめる →</Button>
-        </Link>
-        <p className="text-xs text-gray-400">途中で離れても、続きから再開できます</p>
-      </div>
+      <StartOrResume />
     </main>
   )
 }

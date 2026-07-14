@@ -1,9 +1,12 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { useEffect } from 'react'
 import { AiChatOverlay } from '@/components/wizard/AiChatOverlay'
+import { SaveIndicator } from '@/components/wizard/SaveIndicator'
 import { WizardProgress } from '@/components/wizard/WizardProgress'
 import { countAnsweredCards } from '@/lib/questions'
+import { loadWizardState, saveWizardState } from '@/lib/storage'
 import { useWizardState } from '@/lib/useWizardState'
 import { StepId } from '@/types/wizard'
 
@@ -17,6 +20,14 @@ export default function WizardLayout({ children }: { children: React.ReactNode }
     return Number(match[1]) as StepId
   })()
 
+  // 「続きから再開」の遷移先として、最後に見ていたページを覚えておく
+  useEffect(() => {
+    const state = loadWizardState()
+    if (state.lastPath !== pathname) {
+      saveWizardState({ ...state, lastPath: pathname, currentStep })
+    }
+  }, [pathname, currentStep])
+
   const cardProgress = countAnsweredCards(answers.profile ?? {}, answers.cards ?? {})
 
   return (
@@ -26,6 +37,9 @@ export default function WizardLayout({ children }: { children: React.ReactNode }
         completedSteps={completedSteps}
         cardProgress={cardProgress}
       />
+      <div className="px-4 pt-2">
+        <SaveIndicator />
+      </div>
       <div className="flex-1">{children}</div>
       {/* チャットはウィザード全体で1つ。ステップ間を移動しても会話が途切れない */}
       <AiChatOverlay />
