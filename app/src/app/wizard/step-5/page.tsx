@@ -21,16 +21,13 @@ export default function Step5Page() {
     router.push('/wizard/design')
   }
 
-  const canProceed = (step5.heroText ?? '').trim() !== ''
-
   return (
     <>
       <StepLayout
         stepId={5}
         title="コンテンツの準備"
-        why="サイトの「顔」となる文章をここで準備します。後でAIが整えてくれるので、まずは下書きレベルで大丈夫です。"
+        why="サイトの「顔」となる文章をここで準備します。後でAIが整えてくれるので、まずは下書きレベルで大丈夫です。未入力でもAIが草案を作れます。"
         onNext={save}
-        nextDisabled={!canProceed}
         prevHref="/wizard/step-4"
       >
         <TextArea

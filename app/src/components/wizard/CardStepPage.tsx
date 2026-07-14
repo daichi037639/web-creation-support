@@ -6,7 +6,7 @@ import { StepLayout } from '@/components/wizard/StepLayout'
 import { AiChatOverlay, ConsultRequest } from '@/components/wizard/AiChatOverlay'
 import { QuestionCard } from '@/components/wizard/QuestionCard'
 import { StepClearOverlay } from '@/components/wizard/StepClearOverlay'
-import { getQuestionsFor, isStepClear } from '@/lib/questions'
+import { getQuestionsFor } from '@/lib/questions'
 import {
   loadWizardState,
   saveWizardState,
@@ -67,8 +67,6 @@ export function CardStepPage({
   }
 
   const questions = getQuestionsFor(stepId, profile)
-  const active = questions.filter((q) => cards[q.id]?.status !== 'deferred')
-  const deferred = questions.filter((q) => cards[q.id]?.status === 'deferred')
   const answeredCount = questions.filter((q) => cards[q.id]?.status === 'answered').length
 
   return (
@@ -78,7 +76,6 @@ export function CardStepPage({
         title={title}
         why={why}
         onNext={clearStep}
-        nextDisabled={!isStepClear(stepId, profile, cards)}
         prevHref={prevHref}
       >
         {topExtra?.({ profile, onProfileChange: handleProfileChange })}
@@ -86,11 +83,11 @@ export function CardStepPage({
         <p className="text-xs font-medium text-gray-500">
           🃏 カード {answeredCount} / {questions.length} 枚
           <span className="ml-2 text-gray-400">
-            答えられるものから埋めればOK。迷ったら「あとで考える」へ
+            答えられるところだけでOK。未入力のままでも先へ進めます（AIが補完します）
           </span>
         </p>
 
-        {active.map((q) => (
+        {questions.map((q) => (
           <QuestionCard
             key={q.id}
             question={q}
@@ -99,21 +96,6 @@ export function CardStepPage({
             onConsult={() => setConsult({ id: Date.now(), topic: q.label })}
           />
         ))}
-
-        {deferred.length > 0 && (
-          <div className="flex flex-col gap-2">
-            <p className="text-xs font-medium text-gray-400">あとで考えるカード</p>
-            {deferred.map((q) => (
-              <QuestionCard
-                key={q.id}
-                question={q}
-                answer={cards[q.id]}
-                onChange={(answer) => handleCardChange(q.id, answer)}
-                onConsult={() => setConsult({ id: Date.now(), topic: q.label })}
-              />
-            ))}
-          </div>
-        )}
 
         {bottomExtra}
       </StepLayout>

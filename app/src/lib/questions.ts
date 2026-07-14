@@ -40,7 +40,8 @@ export interface QuestionDef {
   label: string
   placeholder: string
   hint: string
-  required?: boolean
+  /** 入力するとAI生成の質が特に上がるカード。未入力でも先へ進める */
+  recommended?: boolean
   rows?: number
   /** 指定した業界のみに表示する。未指定なら全業界 */
   industries?: Industry[]
@@ -58,7 +59,7 @@ export const QUESTION_BANK: QuestionDef[] = [
     label: '事業・店舗の名前を教えてください',
     placeholder: '例：喜多の園',
     hint: '屋号・ブランド名など、お客さんが呼ぶ名前で構いません',
-    required: true,
+    recommended: true,
     rows: 1,
   },
   {
@@ -68,7 +69,7 @@ export const QUESTION_BANK: QuestionDef[] = [
     label: 'どんな商品・サービスを提供していますか？',
     placeholder: '例：創業70年の老舗茶農家として、群馬県産の緑茶・ほうじ茶を栽培・販売しています',
     hint: '商品の種類・提供方法など、思いついたまま書いてください',
-    required: true,
+    recommended: true,
     variants: {
       restaurant: {
         placeholder: '例：桐生名物のひもかわうどんを、自家製麺で提供しています',
@@ -176,7 +177,7 @@ export interface ResolvedQuestion {
   label: string
   placeholder: string
   hint: string
-  required: boolean
+  recommended: boolean
   rows: number
 }
 
@@ -196,7 +197,7 @@ function resolveVariant(q: QuestionDef, profile: BusinessProfile): ResolvedQuest
     label: v.label ?? q.label,
     placeholder: v.placeholder ?? q.placeholder,
     hint: v.hint ?? q.hint,
-    required: q.required ?? false,
+    recommended: q.recommended ?? false,
     rows: q.rows ?? 3,
   }
 }
@@ -205,21 +206,6 @@ export function getQuestionsFor(step: 1 | 2 | 3, profile: BusinessProfile): Reso
   return QUESTION_BANK.filter((q) => q.step === step && matchesProfile(q, profile)).map((q) =>
     resolveVariant(q, profile),
   )
-}
-
-export function getRequiredIds(step: 1 | 2 | 3, profile: BusinessProfile): string[] {
-  return getQuestionsFor(step, profile)
-    .filter((q) => q.required)
-    .map((q) => q.id)
-}
-
-export function isStepClear(
-  step: 1 | 2 | 3,
-  profile: BusinessProfile,
-  cards: Record<string, CardAnswer>,
-): boolean {
-  if (step === 1 && (!profile.businessType || !profile.industry)) return false
-  return getRequiredIds(step, profile).every((id) => cards[id]?.status === 'answered')
 }
 
 export function countAnsweredCards(

@@ -30,7 +30,7 @@ export interface BusinessProfile {
   industryOther?: string
 }
 
-export type CardStatus = 'unanswered' | 'answered' | 'deferred'
+export type CardStatus = 'unanswered' | 'answered'
 
 export interface CardAnswer {
   value: string
@@ -94,4 +94,6 @@ export interface WizardState {
   currentStep: StepId
   answers: WizardAnswers
   completedSteps: StepId[]
+  /** 最後に表示していたウィザードのパス。「続きから再開」の遷移先 */
+  lastPath?: string
 }

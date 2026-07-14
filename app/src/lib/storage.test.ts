@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { migrateLegacyAnswers, updateCards } from './storage'
-import { WizardAnswers, WizardState } from '@/types/wizard'
+import { migrateDeferredCards, migrateLegacyAnswers, updateCards } from './storage'
+import { CardAnswer, WizardAnswers, WizardState } from '@/types/wizard'
 
 describe('migrateLegacyAnswers', () => {
   it('v0.4 以前の step1〜3 の回答をカードへ変換する', () => {
@@ -55,11 +55,42 @@ describe('updateCards', () => {
       completedSteps: [],
       answers: { cards: { products: { value: 'お茶', status: 'answered' } } },
     }
-    const next = updateCards(state, { history: { value: '', status: 'deferred' } })
+    const next = updateCards(state, { history: { value: '三代目', status: 'answered' } })
     expect(next.answers.cards).toEqual({
       products: { value: 'お茶', status: 'answered' },
-      history: { value: '', status: 'deferred' },
+      history: { value: '三代目', status: 'answered' },
     })
     expect(state.answers.cards).not.toHaveProperty('history')
+  })
+})
+
+describe('migrateDeferredCards', () => {
+  const deferred = { value: '', status: 'deferred' } as unknown as CardAnswer
+
+  it('廃止した「あとで考える」ステータスを未入力へ戻す', () => {
+    const migrated = migrateDeferredCards({
+      cards: {
+        products: { value: 'お茶', status: 'answered' },
+        history: deferred,
+      },
+    })
+    expect(migrated.cards).toEqual({
+      products: { value: 'お茶', status: 'answered' },
+      history: { value: '', status: 'unanswered' },
+    })
+  })
+
+  it('保留時の下書きテキストは消さずに残す', () => {
+    const withDraft = { value: '書きかけ', status: 'deferred' } as unknown as CardAnswer
+    const migrated = migrateDeferredCards({ cards: { history: withDraft } })
+    expect(migrated.cards?.history).toEqual({ value: '書きかけ', status: 'unanswered' })
+  })
+
+  it('deferred がなければそのまま返す', () => {
+    const answers: WizardAnswers = {
+      cards: { products: { value: 'お茶', status: 'answered' } },
+    }
+    expect(migrateDeferredCards(answers)).toBe(answers)
+    expect(migrateDeferredCards({})).toEqual({})
   })
 })

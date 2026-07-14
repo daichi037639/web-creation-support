@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  buildPlanningContext,
-  countAnsweredCards,
-  getQuestionsFor,
-  getRequiredIds,
-  isStepClear,
-} from './questions'
+import { buildPlanningContext, countAnsweredCards, getQuestionsFor } from './questions'
 import { BusinessProfile, CardAnswer } from '@/types/wizard'
 
 const restaurant: BusinessProfile = { businessType: 'store', industry: 'restaurant' }
@@ -49,27 +43,12 @@ describe('getQuestionsFor', () => {
     const q = getQuestionsFor(2, onlineTea).find((x) => x.id === 'target-problem')
     expect(q?.label).toContain('悩みや不満')
   })
-})
 
-describe('isStepClear', () => {
-  const requiredAnswered = {
-    'business-name': answered('喜多の園'),
-    products: answered('お茶の販売'),
-  }
-
-  it('STEP 1 は必須カード回答済みでも業態・業界未選択ならクリア不可', () => {
-    expect(isStepClear(1, {}, requiredAnswered)).toBe(false)
-    expect(isStepClear(1, restaurant, requiredAnswered)).toBe(true)
-  })
-
-  it('必須カードは保留のままではクリア不可', () => {
-    const cards = { ...requiredAnswered, products: { value: '', status: 'deferred' } as CardAnswer }
-    expect(isStepClear(1, restaurant, cards)).toBe(false)
-  })
-
-  it('必須のない STEP 2 は全カード保留でもクリアできる', () => {
-    expect(getRequiredIds(2, restaurant)).toEqual([])
-    expect(isStepClear(2, restaurant, {})).toBe(true)
+  it('事業名と商品概要は「おすすめ」フラグを持つ（必須の概念は廃止）', () => {
+    const step1 = getQuestionsFor(1, restaurant)
+    expect(step1.find((q) => q.id === 'business-name')?.recommended).toBe(true)
+    expect(step1.find((q) => q.id === 'products')?.recommended).toBe(true)
+    expect(step1.find((q) => q.id === 'history')?.recommended).toBe(false)
   })
 })
 
@@ -80,22 +59,22 @@ describe('countAnsweredCards', () => {
     )
   })
 
-  it('保留・未入力は回答数に含めない', () => {
+  it('未入力は回答数に含めない', () => {
     const cards = {
       'business-name': answered(),
-      products: { value: '', status: 'deferred' } as CardAnswer,
+      products: { value: '', status: 'unanswered' } as CardAnswer,
     }
     expect(countAnsweredCards(restaurant, cards).answered).toBe(1)
   })
 })
 
 describe('buildPlanningContext', () => {
-  it('回答済みは値を、保留・未入力は補完前提の印を出す', () => {
+  it('回答済みは値を、未入力は補完前提の印を出す', () => {
     const context = buildPlanningContext({
       profile: restaurant,
       cards: {
         'business-name': answered('ひもかわ屋'),
-        history: { value: '', status: 'deferred' },
+        history: { value: '', status: 'unanswered' },
       },
       step3: { tone: '温かみ・親しみやすい' },
     })

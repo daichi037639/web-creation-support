@@ -53,7 +53,6 @@ export default function Step4Page() {
         title="サイト構成の設計"
         why="サイトに必要なページと機能を決めます。これをもとにAIが生成するコードの種類（シンプルHTML or Next.js）が自動で決まります。"
         onNext={save}
-        nextDisabled={pages.length === 0}
         prevHref="/wizard/step-3"
       >
         <ChipSelect

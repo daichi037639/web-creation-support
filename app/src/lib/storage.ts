@@ -45,13 +45,27 @@ export function migrateLegacyAnswers(answers: WizardAnswers & LegacyAnswers): Wi
   }
 }
 
+/** 「あとで考える（deferred）」廃止前のデータを未入力へ戻す（LOG-009） */
+export function migrateDeferredCards(answers: WizardAnswers): WizardAnswers {
+  const cards = answers.cards
+  if (!cards || !Object.values(cards).some((c) => (c.status as string) === 'deferred')) {
+    return answers
+  }
+  const migrated: Record<string, CardAnswer> = {}
+  for (const [id, card] of Object.entries(cards)) {
+    migrated[id] =
+      (card.status as string) === 'deferred' ? { ...card, status: 'unanswered' } : card
+  }
+  return { ...answers, cards: migrated }
+}
+
 export function loadWizardState(): WizardState {
   if (typeof window === 'undefined') return defaultState
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (!stored) return defaultState
     const state = JSON.parse(stored) as WizardState
-    return { ...state, answers: migrateLegacyAnswers(state.answers) }
+    return { ...state, answers: migrateDeferredCards(migrateLegacyAnswers(state.answers)) }
   } catch {
     return defaultState
   }
