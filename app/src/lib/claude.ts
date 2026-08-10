@@ -2,6 +2,16 @@ import Anthropic from '@anthropic-ai/sdk'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+/**
+ * 使用モデル。環境変数で切り替えられるようにし、コードへのベタ書きをやめる。
+ * - generation: サイト生成（コーディング・構成品質重視。既定は最新 Sonnet）
+ * - fast: チャット・抽出などの軽量タスク（従来モデルを既定のまま維持）
+ */
+export const MODELS = {
+  generation: process.env.CLAUDE_GENERATION_MODEL ?? 'claude-sonnet-5',
+  fast: process.env.CLAUDE_FAST_MODEL ?? 'claude-sonnet-4-6',
+} as const
+
 export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
@@ -23,7 +33,7 @@ export async function streamChatWithCardTool(
   tool: Anthropic.Tool,
 ): Promise<ReadableStream<Uint8Array>> {
   const stream = client.messages.stream({
-    model: 'claude-sonnet-4-6',
+    model: MODELS.fast,
     max_tokens: 2048,
     system: systemPrompt,
     messages,
@@ -61,7 +71,7 @@ export async function completeWithTool<T>(
   tool: Anthropic.Tool,
 ): Promise<T | null> {
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: MODELS.fast,
     max_tokens: 4096,
     system: systemPrompt,
     messages: [{ role: 'user', content: userContent }],
@@ -72,13 +82,50 @@ export async function completeWithTool<T>(
   return block && block.type === 'tool_use' ? (block.input as T) : null
 }
 
+/**
+ * 大きな structured output 用。ストリーミングで受けて SDK タイムアウトを避ける。
+ * モデルによっては thinking と tool_choice 強制の併用が拒否されるため、
+ * 400 が返ったら thinking を無効にして1回だけ再試行する
+ */
+export async function completeWithToolLarge<T>(
+  userContent: string,
+  systemPrompt: string,
+  tool: Anthropic.Tool,
+  { model = MODELS.generation, maxTokens = 32000 } = {},
+): Promise<T | null> {
+  const request = (thinkingOff: boolean) =>
+    client.messages.stream({
+      model,
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userContent }],
+      tools: [tool],
+      tool_choice: { type: 'tool', name: tool.name },
+      ...(thinkingOff ? { thinking: { type: 'disabled' as const } } : {}),
+    })
+
+  let response: Anthropic.Message
+  try {
+    response = await request(false).finalMessage()
+  } catch (e) {
+    if (e instanceof Anthropic.BadRequestError) {
+      response = await request(true).finalMessage()
+    } else {
+      throw e
+    }
+  }
+  const block = response.content.find((b) => b.type === 'tool_use')
+  return block && block.type === 'tool_use' ? (block.input as T) : null
+}
+
 export async function streamChat(
   messages: ChatMessage[],
   systemPrompt: string,
+  maxTokens = 2048,
 ): Promise<ReadableStream<Uint8Array>> {
   const stream = await client.messages.stream({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2048,
+    model: MODELS.fast,
+    max_tokens: maxTokens,
     system: systemPrompt,
     messages,
   })
@@ -104,7 +151,7 @@ export async function completeText(
   systemPrompt: string,
 ): Promise<string> {
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: MODELS.fast,
     max_tokens: 2048,
     system: systemPrompt,
     messages: [{ role: 'user', content: userContent }],
@@ -126,10 +173,24 @@ const DESIGN_RULES = `
 - ユーザーの事業情報・要件を最優先する
 - 設計書とユーザー要件を組み合わせ、独自のサイトを作る`
 
+// 実素材（アップロード済み写真）がある場合にsystemプロンプトへ追加するルール
+const MATERIAL_RULES = `
+
+実際の写真素材が「用意された実際の写真素材」として提供されています。次のルールを厳守してください：
+- 画像には必ず提供されたURLをそのまま <img src="..."> に使う（URLを一切変更しない）
+- 提供されたURL以外の画像URL（プレースホルダー・Unsplash等）を作らない・使わない
+- [外観][店内]の写真はヒーローや店舗紹介に、[商品]は商品セクションに、[人物]は自己紹介に、[ロゴ]はヘッダーに優先的に使う
+- alt属性にはキャプションを基にした日本語の説明を入れる
+- 適切な素材がないセクションは画像なしで美しく成立するレイアウトにする`
+
+/** サイト生成は本文が長いため、チャット既定値より大きい上限で切れを防ぐ */
+const SITE_CODE_MAX_TOKENS = 16384
+
 export async function generateSiteCode(
   context: string,
   codeType: 'static' | 'nextjs',
   hasDesignBrief = false,
+  hasMaterials = false,
 ): Promise<ReadableStream<Uint8Array>> {
   const basePrompt =
     codeType === 'static'
@@ -140,8 +201,7 @@ export async function generateSiteCode(
 Tailwind CSSを使用し、TypeScriptで書いてください。
 コードのみを出力し、説明文は不要です。`
 
-  return streamChat(
-    [{ role: 'user', content: context }],
-    hasDesignBrief ? basePrompt + DESIGN_RULES : basePrompt,
-  )
+  const systemPrompt =
+    basePrompt + (hasMaterials ? MATERIAL_RULES : '') + (hasDesignBrief ? DESIGN_RULES : '')
+  return streamChat([{ role: 'user', content: context }], systemPrompt, SITE_CODE_MAX_TOKENS)
 }

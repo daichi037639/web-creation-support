@@ -37,6 +37,19 @@ export interface CardAnswer {
   status: CardStatus
 }
 
+export type MaterialKind = 'product' | 'exterior' | 'interior' | 'people' | 'logo' | 'other'
+
+/** アップロード済みの実素材写真。実体は Supabase Storage にあり、state にはURLとメタ情報のみ持つ */
+export interface MaterialImage {
+  /** uuid。Storage のオブジェクト名（{sessionId}/{id}.jpg）を兼ねる */
+  id: string
+  /** Supabase Storage の公開URL。生成サイトの <img src> にそのまま使う */
+  url: string
+  kind: MaterialKind
+  /** AIが自動生成し、ユーザーが編集できる短い説明 */
+  caption: string
+}
+
 export interface Step4Answers {
   pages?: string[]
   hasContactForm?: boolean
@@ -81,12 +94,18 @@ export interface WizardAnswers {
   step5?: {
     heroText?: string
     aboutText?: string
+    /** @deprecated materials の有無で代替。旧データ互換のため残す */
     photosReady?: boolean
+    materials?: MaterialImage[]
   }
   design?: DesignChoice
   step6?: {
+    /** @deprecated 旧: 一括コード生成の結果。site へ移行 */
     codeType?: 'static' | 'nextjs'
+    /** @deprecated 旧: 一括コード生成の結果。site へ移行 */
     generatedCode?: string
+    /** Component-driven 生成の canonical state */
+    site?: import('./site').SiteData
   }
 }
 
