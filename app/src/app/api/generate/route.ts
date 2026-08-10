@@ -1,4 +1,5 @@
 import { generateSiteCode } from '@/lib/claude'
+import { buildMaterialsPromptText } from '@/lib/materials'
 import { buildPlanningContext } from '@/lib/questions'
 import { briefToPromptText } from '@/lib/designMatch'
 import { WizardAnswers } from '@/types/wizard'
@@ -18,9 +19,10 @@ ${buildPlanningContext(a)}
 自己紹介文: ${a.step5?.aboutText ?? '未入力'}
 `.trim()
 
-  // デザイン設計書があれば生成コンテキストに追加する（なければ従来どおり）
+  // 実素材・デザイン設計書があれば生成コンテキストに追加する（なければ従来どおり）
+  const withMaterials = base + buildMaterialsPromptText(a.step5?.materials ?? [])
   const brief = a.design?.brief
-  return brief ? `${base}\n\n${briefToPromptText(brief)}` : base
+  return brief ? `${withMaterials}\n\n${briefToPromptText(brief)}` : withMaterials
 }
 
 function detectCodeType(answers: WizardAnswers): 'static' | 'nextjs' {
@@ -35,7 +37,12 @@ export async function POST(req: Request) {
   const { answers } = (await req.json()) as { answers: WizardAnswers }
   const codeType = detectCodeType(answers)
   const context = buildContext(answers)
-  const stream = await generateSiteCode(context, codeType, Boolean(answers.design?.brief))
+  const stream = await generateSiteCode(
+    context,
+    codeType,
+    Boolean(answers.design?.brief),
+    (answers.step5?.materials?.length ?? 0) > 0,
+  )
   return new Response(stream, {
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',

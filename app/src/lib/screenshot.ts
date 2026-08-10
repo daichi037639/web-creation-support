@@ -1,5 +1,6 @@
 import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { uploadPublicObject } from '@/lib/supabase/storageUpload'
 
 const BUCKET = 'screenshots'
 
@@ -26,24 +27,11 @@ export async function captureScreenshot(url: string): Promise<Buffer | null> {
   }
 }
 
-// Supabase Storage（公開バケット）にアップロードし、公開URLを返す。
-// バケットが未作成なら作ってリトライする
+// Supabase Storage（公開バケット）にアップロードし、公開URLを返す
 export async function uploadScreenshot(
   supabase: SupabaseClient,
   referenceId: string,
   png: Buffer,
 ): Promise<string | null> {
-  const path = `${referenceId}.png`
-  const options = { contentType: 'image/png', upsert: true }
-
-  let { error } = await supabase.storage.from(BUCKET).upload(path, png, options)
-  if (error && /bucket/i.test(error.message)) {
-    await supabase.storage.createBucket(BUCKET, { public: true })
-    ;({ error } = await supabase.storage.from(BUCKET).upload(path, png, options))
-  }
-  if (error) {
-    console.error('screenshot upload failed:', error.message)
-    return null
-  }
-  return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
+  return uploadPublicObject(supabase, BUCKET, `${referenceId}.png`, png, 'image/png')
 }
