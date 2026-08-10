@@ -32,8 +32,8 @@ export function StepClearOverlay({ stepId, onDone }: StepClearOverlayProps) {
             </span>
           ))}
         </div>
-        <p className="text-xl font-bold text-gray-900">STEP {stepId} クリア！</p>
-        <p className="text-sm text-gray-500">その調子です。次に進みましょう</p>
+        <p className="text-xl font-bold text-slate-900">STEP {stepId} クリア！</p>
+        <p className="text-sm text-slate-500">その調子です。次に進みましょう</p>
       </div>
     </div>
   )

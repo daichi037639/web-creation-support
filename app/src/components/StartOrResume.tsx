@@ -25,7 +25,7 @@ export function StartOrResume() {
         <Link href="/wizard/step-1">
           <Button className="px-10 py-3 text-base">はじめる →</Button>
         </Link>
-        <p className="text-xs text-gray-400">入力は自動で保存され、途中で離れても続きから再開できます</p>
+        <p className="text-xs text-white/40">入力は自動で保存され、途中で離れても続きから再開できます</p>
       </div>
     )
   }
@@ -47,10 +47,10 @@ export function StartOrResume() {
           つづきから再開する →
         </Button>
       </Link>
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-white/40">
         カード {progress.answered} / {progress.total} 枚まで入力済み。前回の続きから進められます
       </p>
-      <button onClick={restart} className="text-xs text-gray-400 underline hover:text-gray-600">
+      <button onClick={restart} className="text-xs text-white/40 underline hover:text-white/70">
         最初からやり直す
       </button>
     </div>

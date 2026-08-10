@@ -103,32 +103,32 @@ export function BulkTalkPanel({ profile, cards }: BulkTalkPanelProps) {
     return (
       <button
         onClick={() => setOpenPanel(true)}
-        className="flex w-full items-center justify-between rounded-xl border border-green-200 bg-green-50/60 px-4 py-3 text-left hover:bg-green-50"
+        className="flex w-full items-center justify-between rounded-xl border border-accent-200 bg-accent-50/60 px-4 py-3 text-left hover:bg-accent-50"
       >
         <span>
-          <span className="block text-sm font-semibold text-green-800">
+          <span className="block text-sm font-semibold text-accent-800">
             🎤 まとめて話して、AIにおまかせ
           </span>
-          <span className="mt-0.5 block text-xs text-green-700">
+          <span className="mt-0.5 block text-xs text-accent-700">
             思いつくまま書くか、パンフレット等の写真を撮るだけで、AIがカードに振り分けます
           </span>
         </span>
-        <span className="shrink-0 text-green-700">▼</span>
+        <span className="shrink-0 text-accent-700">▼</span>
       </button>
     )
   }
 
   return (
-    <section className="flex flex-col gap-3 rounded-xl border border-green-200 bg-green-50/60 p-4">
+    <section className="flex flex-col gap-3 rounded-xl border border-accent-200 bg-accent-50/60 p-4">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-sm font-semibold text-green-800">🎤 まとめて話して、AIにおまかせ</p>
-          <p className="mt-0.5 text-xs text-green-700">
+          <p className="text-sm font-semibold text-accent-800">🎤 まとめて話して、AIにおまかせ</p>
+          <p className="mt-0.5 text-xs text-accent-700">
             商品のこと、お客さんのこと、こだわり、歴史…順番は気にせず、思いつくまま書いてください。
             パンフレット・チラシ・メニューの写真からも読み取れます。
           </p>
         </div>
-        <button onClick={() => setOpenPanel(false)} className="shrink-0 text-green-700">▲</button>
+        <button onClick={() => setOpenPanel(false)} className="shrink-0 text-accent-700">▲</button>
       </div>
 
       {proposals === null && (
@@ -155,11 +155,11 @@ export function BulkTalkPanel({ profile, cards }: BulkTalkPanelProps) {
               <button
                 onClick={() => fileRef.current?.click()}
                 disabled={images.length >= MAX_IMAGES}
-                className="rounded-lg border border-green-300 bg-white px-3 py-1.5 text-xs font-medium text-green-800 hover:bg-green-50 disabled:opacity-40"
+                className="rounded-lg border border-accent-300 bg-white px-3 py-1.5 text-xs font-medium text-accent-800 hover:bg-accent-50 disabled:opacity-40"
               >
                 📷 資料の写真を追加（{images.length}/{MAX_IMAGES}）
               </button>
-              <span className="text-[11px] text-green-700">
+              <span className="text-[11px] text-accent-700">
                 パンフレット・チラシ・メニューなど
               </span>
             </div>
@@ -171,12 +171,12 @@ export function BulkTalkPanel({ profile, cards }: BulkTalkPanelProps) {
                     <img
                       src={`data:${img.mediaType};base64,${img.data}`}
                       alt={`資料 ${i + 1}`}
-                      className="h-16 w-16 rounded-lg object-cover ring-1 ring-green-200"
+                      className="h-16 w-16 rounded-lg object-cover ring-1 ring-accent-200"
                     />
                     <button
                       onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}
                       aria-label={`資料 ${i + 1} を削除`}
-                      className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gray-700 text-[10px] text-white"
+                      className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-700 text-[10px] text-white"
                     >
                       ✕
                     </button>
@@ -198,22 +198,22 @@ export function BulkTalkPanel({ profile, cards }: BulkTalkPanelProps) {
 
       {proposals !== null && (
         <div className="flex flex-col gap-2">
-          <p className="text-xs font-medium text-gray-600">
+          <p className="text-xs font-medium text-slate-600">
             この内容でカードに記入します。修正したい場合は反映後にカードを直接編集できます
           </p>
           {proposals.map((p, i) => (
             <label
               key={p.id}
-              className="flex cursor-pointer items-start gap-3 rounded-lg bg-white p-3 ring-1 ring-green-100"
+              className="flex cursor-pointer items-start gap-3 rounded-lg bg-white p-3 ring-1 ring-accent-100"
             >
               <input
                 type="checkbox"
                 checked={p.selected}
                 onChange={() => toggle(i)}
-                className="mt-0.5 h-4 w-4 accent-green-700"
+                className="mt-0.5 h-4 w-4 accent-accent-700"
               />
               <span className="min-w-0">
-                <span className="flex items-center gap-2 text-[11px] font-medium text-gray-500">
+                <span className="flex items-center gap-2 text-[11px] font-medium text-slate-500">
                   {p.title}
                   {p.overwrites && (
                     <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-700">
@@ -221,7 +221,7 @@ export function BulkTalkPanel({ profile, cards }: BulkTalkPanelProps) {
                     </span>
                   )}
                 </span>
-                <span className="mt-0.5 block text-sm text-gray-800 whitespace-pre-wrap">{p.value}</span>
+                <span className="mt-0.5 block text-sm text-slate-800 whitespace-pre-wrap">{p.value}</span>
               </span>
             </label>
           ))}
@@ -236,7 +236,7 @@ export function BulkTalkPanel({ profile, cards }: BulkTalkPanelProps) {
         </div>
       )}
 
-      {notice && <p className="text-xs font-medium text-green-800">{notice}</p>}
+      {notice && <p className="text-xs font-medium text-accent-800">{notice}</p>}
     </section>
   )
 }

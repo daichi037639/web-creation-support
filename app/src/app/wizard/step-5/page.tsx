@@ -2,16 +2,18 @@
 
 import { useRouter } from 'next/navigation'
 import { StepLayout } from '@/components/wizard/StepLayout'
+import { MaterialUploader } from '@/components/wizard/MaterialUploader'
 import { TextArea } from '@/components/ui/TextArea'
 import { loadWizardState, saveWizardState, updateStepAnswers, markStepComplete } from '@/lib/storage'
 import { useWizardState } from '@/lib/useWizardState'
+import type { MaterialImage } from '@/types/wizard'
 
 export default function Step5Page() {
   const router = useRouter()
   const { answers } = useWizardState()
   const step5 = answers.step5 ?? {}
 
-  function update(patch: { heroText?: string; aboutText?: string; photosReady?: boolean }) {
+  function update(patch: { heroText?: string; aboutText?: string; materials?: MaterialImage[] }) {
     saveWizardState(updateStepAnswers(loadWizardState(), 'step5', patch))
   }
 
@@ -45,20 +47,13 @@ export default function Step5Page() {
           rows={4}
           hint="あなたの人柄や歴史が伝わる文章です。後でAIが整えることもできます"
         />
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={step5.photosReady ?? false}
-            onChange={(e) => update({ photosReady: e.target.checked })}
-            className="h-4 w-4 accent-green-700"
-          />
-          <span className="text-sm text-gray-700">
-            写真素材がある（商品写真・店舗写真・人物写真など）
-          </span>
-        </label>
-        {!step5.photosReady && (
+        <MaterialUploader
+          materials={step5.materials ?? []}
+          onChange={(materials) => update({ materials })}
+        />
+        {(step5.materials ?? []).length === 0 && (
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
-            写真がない場合でも大丈夫です。AIがサンプル画像を組み込んだサイトを生成します。後から差し替えられます。
+            写真がない場合でも大丈夫です。写真なしで美しく見えるサイトを生成し、後から追加できます。
           </p>
         )}
       </StepLayout>

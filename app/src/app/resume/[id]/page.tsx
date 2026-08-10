@@ -42,13 +42,13 @@ export default function ResumePage({ params }: { params: Promise<{ id: string }>
       {!error ? (
         <>
           <div className="text-3xl">📱</div>
-          <p className="text-sm text-gray-600">前回の続きを読み込んでいます…</p>
+          <p className="text-sm text-slate-600">前回の続きを読み込んでいます…</p>
         </>
       ) : (
         <>
           <div className="text-3xl">😢</div>
-          <p className="text-sm font-medium text-gray-800">{error}</p>
-          <Link href="/" className="text-sm text-green-700 underline">
+          <p className="text-sm font-medium text-slate-800">{error}</p>
+          <Link href="/" className="text-sm text-accent-700 underline">
             トップページへ戻る
           </Link>
         </>

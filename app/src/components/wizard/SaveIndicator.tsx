@@ -24,7 +24,7 @@ export function SaveIndicator() {
   return (
     <p
       className={`text-right text-[11px] transition-colors ${
-        justSaved ? 'font-medium text-green-600' : 'text-gray-400'
+        justSaved ? 'font-medium text-accent-700' : 'text-slate-400'
       }`}
     >
       {justSaved ? '✓ 保存しました' : '入力は自動で保存されます。途中でやめても続きから再開できます'}

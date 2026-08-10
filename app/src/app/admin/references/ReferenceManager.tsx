@@ -58,17 +58,17 @@ export function ReferenceManager({
           placeholder="https://example.com（参考にしたいサイトのURL）"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-green-700 focus:outline-none"
+          className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-accent-700 focus:outline-none"
         />
         <Button type="submit" disabled={loading}>
           {loading ? 'AI分析中…' : '登録'}
         </Button>
       </form>
-      {message && <p className="text-sm text-gray-700">{message}</p>}
+      {message && <p className="text-sm text-slate-700">{message}</p>}
 
       <ul className="space-y-3">
         {references.map((ref) => (
-          <li key={ref.id} className="rounded-lg border border-gray-200 p-4">
+          <li key={ref.id} className="rounded-lg border border-slate-200 p-4">
             <div className="flex gap-4">
               {ref.analysis?.screenshotUrl && (
                 // 外部Storage上のスクリーンショットなので next/image は使わない
@@ -76,7 +76,7 @@ export function ReferenceManager({
                 <img
                   src={ref.analysis.screenshotUrl}
                   alt={`${ref.title} のスクリーンショット`}
-                  className="h-20 w-32 shrink-0 rounded border border-gray-100 object-cover object-top"
+                  className="h-20 w-32 shrink-0 rounded border border-slate-100 object-cover object-top"
                 />
               )}
               <div className="min-w-0 flex-1">
@@ -85,16 +85,16 @@ export function ReferenceManager({
                     href={ref.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="truncate font-medium text-green-800 hover:underline"
+                    className="truncate font-medium text-accent-800 hover:underline"
                   >
                     {ref.title}
                   </a>
-                  <span className="shrink-0 text-xs text-gray-500">
+                  <span className="shrink-0 text-xs text-slate-500">
                     {ref.industry} / {ref.status}
                   </span>
                 </div>
-                <p className="mt-1 text-sm text-gray-600">{ref.summary}</p>
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="mt-1 text-sm text-slate-600">{ref.summary}</p>
+                <p className="mt-1 text-xs text-slate-400">
                   {ref.style_tags.join(' / ')}
                 </p>
               </div>

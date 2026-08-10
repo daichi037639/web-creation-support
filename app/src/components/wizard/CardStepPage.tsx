@@ -80,9 +80,9 @@ export function CardStepPage({
 
         <BulkTalkPanel profile={profile} cards={cards} />
 
-        <p className="text-xs font-medium text-gray-500">
+        <p className="text-xs font-medium text-slate-500">
           🃏 カード {answeredCount} / {questions.length} 枚
-          <span className="ml-2 text-gray-400">
+          <span className="ml-2 text-slate-400">
             答えられるところだけでOK。未入力のままでも先へ進めます（AIが補完します）
           </span>
         </p>

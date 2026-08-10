@@ -26,7 +26,7 @@ export function PreGenerationCheck({ answers }: PreGenerationCheckProps) {
 
   if (unanswered.length === 0) {
     return (
-      <p className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-800">
+      <p className="rounded-xl bg-accent-50 px-4 py-3 text-sm text-accent-800">
         ✓ すべての項目が入力済みです。あなたの言葉を最大限に活かしてサイトを生成します。
       </p>
     )

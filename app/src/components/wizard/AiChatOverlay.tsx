@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
+import { ChatIcon } from '@/components/ui/icons'
 import { TextArea } from '@/components/ui/TextArea'
 import type { CardUpdate } from '@/lib/claude'
 import {
@@ -12,6 +13,7 @@ import {
   saveChatMessages,
   clearChatMessages,
 } from '@/lib/chatStorage'
+import { VoiceInterviewOverlay } from '@/components/wizard/VoiceInterviewOverlay'
 import { subscribeConsult } from '@/lib/consultBus'
 import { getAllQuestions } from '@/lib/questions'
 import { loadWizardState, saveWizardState, updateCards } from '@/lib/storage'
@@ -45,6 +47,7 @@ export function AiChatOverlay() {
   )
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [voiceOpen, setVoiceOpen] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const stepContext =
@@ -180,6 +183,13 @@ export function AiChatOverlay() {
     sendMessage('AIインタビューをお願いします。質問に1つずつ答えていきます。', true)
   }
 
+  // 音声が使えない環境からのフォールバック：音声UIを閉じてテキストインタビューへ
+  function fallbackToTextInterview() {
+    setVoiceOpen(false)
+    setOpen(true)
+    startInterview()
+  }
+
   function stopInterview() {
     setInterview(false)
     localStorage.removeItem(INTERVIEW_KEY)
@@ -195,29 +205,37 @@ export function AiChatOverlay() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-green-700 text-white shadow-lg hover:bg-green-800 transition-colors"
+        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-accent-600 text-white shadow-lg hover:bg-accent-700 transition-colors"
         aria-label="AIに相談する"
       >
-        💬
+        <ChatIcon size={24} />
       </button>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-end p-4 sm:items-center sm:justify-end">
-          <div className="flex h-[70vh] w-full max-w-sm flex-col rounded-2xl bg-white shadow-2xl ring-1 ring-gray-200">
+          <div className="flex h-[70vh] w-full max-w-sm flex-col rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200">
             <div className="flex items-center justify-between border-b px-4 py-3">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold text-gray-900">AIに相談する</h2>
+                <h2 className="text-sm font-semibold text-slate-900">AIに相談する</h2>
                 {interview && (
-                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700">
+                  <span className="rounded-full bg-accent-100 px-2 py-0.5 text-[10px] font-medium text-accent-700">
                     🎙 インタビュー中
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-3">
+                {messages.length > 0 && (
+                  <button
+                    onClick={() => setVoiceOpen(true)}
+                    className="text-[11px] text-slate-400 hover:text-slate-600"
+                  >
+                    🎙 音声で話す
+                  </button>
+                )}
                 {interview && (
                   <button
                     onClick={stopInterview}
-                    className="text-[11px] text-gray-400 hover:text-gray-600"
+                    className="text-[11px] text-slate-400 hover:text-slate-600"
                   >
                     ｲﾝﾀﾋﾞｭｰ終了
                   </button>
@@ -225,33 +243,39 @@ export function AiChatOverlay() {
                 {messages.length > 0 && (
                   <button
                     onClick={clearHistory}
-                    className="text-[11px] text-gray-400 hover:text-gray-600"
+                    className="text-[11px] text-slate-400 hover:text-slate-600"
                   >
                     履歴を消す
                   </button>
                 )}
-                <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+                <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
               {messages.length === 0 && (
                 <div className="mt-8 flex flex-col items-center gap-4">
-                  <p className="text-center text-sm text-gray-400">
+                  <p className="text-center text-sm text-slate-400">
                     わからないことを<br />自由に聞いてください
                     <br />
-                    <span className="mt-2 block text-xs text-gray-300">
+                    <span className="mt-2 block text-xs text-slate-300">
                       これまでの回答を踏まえてお答えします
                     </span>
                   </p>
                   <button
-                    onClick={startInterview}
-                    className="rounded-xl border border-green-300 bg-green-50 px-4 py-3 text-sm font-medium text-green-800 hover:bg-green-100"
+                    onClick={() => setVoiceOpen(true)}
+                    className="rounded-xl border border-accent-300 bg-accent-50 px-4 py-3 text-sm font-medium text-accent-800 hover:bg-accent-100"
                   >
                     🎙 AIインタビューで進める
-                    <span className="block text-[11px] font-normal text-green-700">
-                      AIの質問に答えるだけで、カードが埋まっていきます
+                    <span className="block text-[11px] font-normal text-accent-700">
+                      AIと音声で会話するだけで、カードが埋まっていきます
                     </span>
+                  </button>
+                  <button
+                    onClick={startInterview}
+                    className="text-[11px] text-slate-400 underline hover:text-slate-600"
+                  >
+                    音声が使えない場合はテキストで進める
                   </button>
                 </div>
               )}
@@ -259,22 +283,22 @@ export function AiChatOverlay() {
                 <div key={i} className="space-y-2">
                   <div className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                     {m.content && (
-                      <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap ${m.role === 'user' ? 'bg-green-700 text-white' : 'bg-gray-100 text-gray-900'}`}>
+                      <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap ${m.role === 'user' ? 'bg-accent-600 text-white' : 'bg-slate-100 text-slate-900'}`}>
                         {m.content}
                       </div>
                     )}
                   </div>
                   {m.proposals && m.proposals.length > 0 && (
-                    <div className="rounded-xl border border-green-200 bg-green-50 p-3 space-y-2">
-                      <p className="text-xs font-semibold text-green-800">✏️ カードへの記入の提案</p>
+                    <div className="rounded-xl border border-accent-200 bg-accent-50 p-3 space-y-2">
+                      <p className="text-xs font-semibold text-accent-800">✏️ カードへの記入の提案</p>
                       {m.proposals.map((p, j) => (
-                        <div key={j} className="rounded-lg bg-white p-2.5 ring-1 ring-green-100">
-                          <p className="text-[11px] font-medium text-gray-500">{p.title}</p>
-                          <p className="text-sm text-gray-800 whitespace-pre-wrap">{p.value}</p>
+                        <div key={j} className="rounded-lg bg-white p-2.5 ring-1 ring-accent-100">
+                          <p className="text-[11px] font-medium text-slate-500">{p.title}</p>
+                          <p className="text-sm text-slate-800 whitespace-pre-wrap">{p.value}</p>
                           <button
                             onClick={() => applyProposal(i, j)}
                             disabled={p.applied}
-                            className={`mt-1.5 text-xs font-medium ${p.applied ? 'text-gray-400' : 'text-green-700 hover:text-green-900'}`}
+                            className={`mt-1.5 text-xs font-medium ${p.applied ? 'text-slate-400' : 'text-accent-700 hover:text-accent-900'}`}
                           >
                             {p.applied ? '✓ 反映しました' : 'カードに反映する'}
                           </button>
@@ -302,6 +326,13 @@ export function AiChatOverlay() {
             </div>
           </div>
         </div>
+      )}
+
+      {voiceOpen && (
+        <VoiceInterviewOverlay
+          onClose={() => setVoiceOpen(false)}
+          onFallbackToText={fallbackToTextInterview}
+        />
       )}
     </>
   )

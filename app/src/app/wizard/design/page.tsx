@@ -106,8 +106,8 @@ export default function DesignPage() {
         prevHref="/wizard/step-5"
       >
         {candidates === null && (
-          <div className="flex flex-col items-center gap-3 rounded-xl bg-gray-50 p-8 text-center">
-            <p className="text-sm text-gray-600">
+          <div className="flex flex-col items-center gap-3 rounded-xl bg-slate-50 p-8 text-center">
+            <p className="text-sm text-slate-600">
               これまでの回答（業種・ターゲット・希望する雰囲気など）から、
               <br className="hidden sm:block" />
               参考になるデザインの方向性をAIが探します。
@@ -141,12 +141,12 @@ export default function DesignPage() {
               type="button"
               onClick={() => setSelection({ type: 'ai' })}
               aria-pressed={selection?.type === 'ai'}
-              className={`rounded-xl border px-4 py-3 text-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-green-600
-                ${selection?.type === 'ai' ? 'border-green-600 bg-green-50 font-medium text-green-800 ring-2 ring-green-600' : 'border-gray-200 text-gray-600 hover:border-green-400'}`}
+              className={`rounded-xl border px-4 py-3 text-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600
+                ${selection?.type === 'ai' ? 'border-accent-600 bg-accent-50 font-medium text-accent-800 ring-2 ring-accent-600' : 'border-slate-200 text-slate-600 hover:border-accent-400'}`}
             >
               {selection?.type === 'ai' ? '🤖 AIにおまかせ（選択中 ✓）' : '🤖 迷ったら「AIにおまかせ」'}
             </button>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-slate-400">
               選ばずに「サイト生成へ」進むこともできます（その場合は標準のデザインで生成します）
             </p>
           </>

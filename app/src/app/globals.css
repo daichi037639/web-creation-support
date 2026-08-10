@@ -1,28 +1,48 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+  デザイントークン。
+  配色は Originkit「Genius」テンプレートから抽出:
+  - オフホワイト背景 + 墨色テキスト + 青灰色のサブテキスト/罫線
+  - アクセントは鮮やかな青 (#0099FF)
+  - ダークセクション用の night 系 (Suno / Kling AI のトーン)
+*/
+@theme {
+  /* アクセント（青）。Tailwind の green と同じ番手で置換できるよう10段で定義 */
+  --color-accent-50: #f0f8ff;
+  --color-accent-100: #e0f1ff;
+  --color-accent-200: #b8e0ff;
+  --color-accent-300: #85ccff;
+  --color-accent-400: #47b3ff;
+  --color-accent-500: #0099ff;
+  --color-accent-600: #0084e6;
+  --color-accent-700: #006bbf;
+  --color-accent-800: #00549a;
+  --color-accent-900: #073f73;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* ライト面 (Genius) */
+  --color-canvas: #f4f7f9;
+  --color-surface: #ffffff;
+  --color-ink: #1c1c1c;
+  --color-sub: #3d495b;
+  --color-muted: #526279;
+  --color-line: #dde5ed;
+  --color-line-soft: #e4ebf0;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* ダーク面 (Suno / Kling) */
+  --color-night: #0c0c0c;
+  --color-night-soft: #1c1c1c;
+  --color-night-card: #212327;
+  --color-night-line: #2f3237;
+
+  --font-sans: var(--font-geist), var(--font-noto-sans-jp), "Hiragino Sans",
+    "Yu Gothic UI", sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
 }
 
 /* ステップクリア演出（StepClearOverlay）。ライブラリを使わない方針のため自前定義 */
@@ -57,4 +77,36 @@ body {
 
 .animate-confetti {
   animation: confetti 0.9s ease-out forwards;
+}
+
+/* AI音声インタビュー（VoiceInterviewOverlay）のオーブ演出 */
+@keyframes voice-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes voice-talk {
+  0%,
+  100% {
+    transform: scale(0.96);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes voice-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
 }

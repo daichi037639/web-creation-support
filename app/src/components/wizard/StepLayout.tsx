@@ -28,13 +28,13 @@ export function StepLayout({
 }: StepLayoutProps) {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8">
-      <header className="flex flex-col gap-1">
-        <p className="text-xs font-medium uppercase tracking-widest text-green-600">
+      <header className="flex flex-col gap-2">
+        <p className="self-start rounded-full border border-line bg-surface px-3 py-1 text-xs font-semibold tracking-widest text-accent-700">
           STEP {stepId}
         </p>
-        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-        <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          <span className="font-semibold">なぜこのステップが必要か：</span>
+        <h1 className="text-2xl font-bold text-ink">{title}</h1>
+        <p className="rounded-xl border border-line bg-surface px-4 py-3 text-sm leading-relaxed text-sub">
+          <span className="font-semibold text-ink">なぜこのステップが必要か：</span>
           {why}
         </p>
       </header>

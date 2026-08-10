@@ -15,8 +15,8 @@ export default function Step1Page() {
       prevHref="/"
       nextHref="/wizard/step-2"
       topExtra={({ profile, onProfileChange }) => (
-        <section className="flex flex-col gap-4 rounded-xl bg-green-50/70 p-4 ring-1 ring-green-100">
-          <p className="text-sm font-semibold text-green-800">
+        <section className="flex flex-col gap-4 rounded-xl bg-accent-50/70 p-4 ring-1 ring-accent-100">
+          <p className="text-sm font-semibold text-accent-800">
             まずはタップで2つ選ぶだけ。あなたに合った質問カードをお配りします
           </p>
           <ChipSelect

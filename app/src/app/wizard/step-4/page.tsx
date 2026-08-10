@@ -62,7 +62,7 @@ export default function Step4Page() {
         />
 
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-gray-700">必要な機能はありますか？</p>
+          <p className="text-sm font-medium text-slate-700">必要な機能はありますか？</p>
           <div className="flex flex-col gap-2">
             {FEATURE_OPTIONS.map(({ key, label, note }) => (
               <label key={key} className="flex items-start gap-3 cursor-pointer">
@@ -70,11 +70,11 @@ export default function Step4Page() {
                   type="checkbox"
                   checked={step4[key] ?? false}
                   onChange={(e) => update({ [key]: e.target.checked })}
-                  className="mt-0.5 h-4 w-4 accent-green-700"
+                  className="mt-0.5 h-4 w-4 accent-accent-700"
                 />
                 <span>
-                  <span className="text-sm font-medium text-gray-900">{label}</span>
-                  <span className="ml-2 text-xs text-gray-500">{note}</span>
+                  <span className="text-sm font-medium text-slate-900">{label}</span>
+                  <span className="ml-2 text-xs text-slate-500">{note}</span>
                 </span>
               </label>
             ))}
@@ -85,7 +85,7 @@ export default function Step4Page() {
             </p>
           )}
           {!hasComplexFeature && pages.length > 0 && (
-            <p className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
+            <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
               シンプルなサイトです。生成コードは <strong>静的HTML</strong> 形式になります。
             </p>
           )}

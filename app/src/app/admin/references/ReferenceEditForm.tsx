@@ -44,16 +44,16 @@ export function ReferenceEditForm({ reference, onSaved, onCancel }: Props) {
   }
 
   const inputClass =
-    'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-green-700 focus:outline-none'
+    'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-accent-700 focus:outline-none'
 
   return (
-    <div className="mt-3 space-y-3 border-t border-gray-100 pt-3">
-      <label className="block text-xs text-gray-500">
+    <div className="mt-3 space-y-3 border-t border-slate-100 pt-3">
+      <label className="block text-xs text-slate-500">
         サイト名
         <input value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} />
       </label>
       <div className="flex gap-3">
-        <label className="block flex-1 text-xs text-gray-500">
+        <label className="block flex-1 text-xs text-slate-500">
           業界
           <select
             value={industry}
@@ -70,7 +70,7 @@ export function ReferenceEditForm({ reference, onSaved, onCancel }: Props) {
             ))}
           </select>
         </label>
-        <label className="block flex-1 text-xs text-gray-500">
+        <label className="block flex-1 text-xs text-slate-500">
           公開状態
           <select
             value={status}
@@ -82,11 +82,11 @@ export function ReferenceEditForm({ reference, onSaved, onCancel }: Props) {
           </select>
         </label>
       </div>
-      <label className="block text-xs text-gray-500">
+      <label className="block text-xs text-slate-500">
         スタイルタグ（カンマ区切り）
         <input value={tags} onChange={(e) => setTags(e.target.value)} className={inputClass} />
       </label>
-      <label className="block text-xs text-gray-500">
+      <label className="block text-xs text-slate-500">
         紹介文
         <textarea
           value={summary}

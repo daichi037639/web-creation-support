@@ -10,7 +10,7 @@ interface ChipSelectProps {
 export function ChipSelect({ label, options, selected, onToggle }: ChipSelectProps) {
   return (
     <div className="flex flex-col gap-2">
-      {label && <p className="text-sm font-medium text-gray-700">{label}</p>}
+      {label && <p className="text-sm font-medium text-slate-700">{label}</p>}
       <div className="flex flex-wrap gap-2">
         {options.map(({ value, label: optionLabel }) => (
           <button
@@ -18,8 +18,8 @@ export function ChipSelect({ label, options, selected, onToggle }: ChipSelectPro
             onClick={() => onToggle(value)}
             className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
               selected.includes(value)
-                ? 'border-green-600 bg-green-50 text-green-700 font-medium'
-                : 'border-gray-200 text-gray-600 hover:border-gray-400'
+                ? 'border-accent-600 bg-accent-50 text-accent-700 font-medium'
+                : 'border-slate-200 text-slate-600 hover:border-slate-400'
             }`}
           >
             {optionLabel}

@@ -1,9 +1,8 @@
 import { getSession, upsertSession } from '@/lib/supabase/sessions'
+import { UUID_RE } from '@/lib/uuid'
 import { WizardState } from '@/types/wizard'
 
 export const runtime = 'nodejs'
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 /** state + chat 合計の上限（生成コードやチャット履歴を含むため余裕を持たせる） */
 const MAX_PAYLOAD_CHARS = 2_000_000
 

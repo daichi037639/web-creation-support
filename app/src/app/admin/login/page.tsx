@@ -30,11 +30,11 @@ export default function AdminLoginPage() {
   }
 
   const inputClass =
-    'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-green-700 focus:outline-none'
+    'w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-accent-700 focus:outline-none'
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4">
-      <h1 className="mb-6 text-center text-xl font-bold text-gray-900">
+      <h1 className="mb-6 text-center text-xl font-bold text-slate-900">
         管理者ログイン
       </h1>
       <form onSubmit={handleSubmit} className="space-y-4">

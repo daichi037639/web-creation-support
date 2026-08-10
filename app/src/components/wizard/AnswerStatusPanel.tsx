@@ -32,7 +32,7 @@ export function AnswerStatusPanel() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="text-[11px] font-medium text-green-700 hover:text-green-900"
+        className="text-[11px] font-medium text-accent-700 hover:text-accent-900"
       >
         📋 入力状況を見る
       </button>
@@ -47,12 +47,12 @@ export function AnswerStatusPanel() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b px-4 py-3">
-              <h2 className="text-sm font-semibold text-gray-900">入力状況</h2>
-              <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+              <h2 className="text-sm font-semibold text-slate-900">入力状況</h2>
+              <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 py-3">
-              <p className="mb-3 text-xs text-gray-500">
+              <p className="mb-3 text-xs text-slate-500">
                 未入力の項目はAIが補完しますが、埋めるほどサイトの仕上がりが良くなります。
                 タップするとそのステップに移動できます。
               </p>
@@ -61,7 +61,7 @@ export function AnswerStatusPanel() {
                 const stepInfo = STEPS.find((s) => s.id === step)
                 return (
                   <div key={step} className="mb-4">
-                    <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-green-700">
+                    <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-accent-700">
                       STEP {step}｜{stepInfo?.title}
                     </p>
                     <ul className="flex flex-col gap-1">
@@ -72,14 +72,14 @@ export function AnswerStatusPanel() {
                             <Link
                               href={`/wizard/step-${step}`}
                               onClick={() => setOpen(false)}
-                              className="flex items-center justify-between rounded-lg px-2 py-1.5 hover:bg-gray-50"
+                              className="flex items-center justify-between rounded-lg px-2 py-1.5 hover:bg-slate-50"
                             >
-                              <span className={`text-sm ${done ? 'text-gray-700' : 'text-gray-500'}`}>
+                              <span className={`text-sm ${done ? 'text-slate-700' : 'text-slate-500'}`}>
                                 {q.title}
                               </span>
                               <span
                                 className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                                  done ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                                  done ? 'bg-accent-100 text-accent-700' : 'bg-slate-100 text-slate-500'
                                 }`}
                               >
                                 {done ? '✓ 入力済み' : '未入力'}
@@ -99,31 +99,31 @@ export function AnswerStatusPanel() {
                 <button
                   onClick={createHandoverLink}
                   disabled={handover.busy}
-                  className="text-xs font-medium text-green-700 hover:text-green-900 disabled:opacity-50"
+                  className="text-xs font-medium text-accent-700 hover:text-accent-900 disabled:opacity-50"
                 >
                   {handover.busy ? '引き継ぎリンクを作成中…' : '📱 別の端末に引き継ぐ'}
                 </button>
               )}
               {handover.url && (
                 <div className="flex flex-col gap-1.5">
-                  <p className="text-xs font-medium text-gray-700">
+                  <p className="text-xs font-medium text-slate-700">
                     このリンクを別の端末で開くと、続きから始められます
                   </p>
                   <div className="flex items-center gap-2">
                     <input
                       readOnly
                       value={handover.url}
-                      className="min-w-0 flex-1 rounded-lg bg-gray-50 px-2 py-1.5 text-[11px] text-gray-600 ring-1 ring-gray-200"
+                      className="min-w-0 flex-1 rounded-lg bg-slate-50 px-2 py-1.5 text-[11px] text-slate-600 ring-1 ring-slate-200"
                       onFocus={(e) => e.target.select()}
                     />
                     <button
                       onClick={() => navigator.clipboard.writeText(handover.url!)}
-                      className="shrink-0 rounded-lg bg-green-700 px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-green-800"
+                      className="shrink-0 rounded-lg bg-accent-600 px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-accent-700"
                     >
                       コピー
                     </button>
                   </div>
-                  <p className="text-[10px] text-gray-400">
+                  <p className="text-[10px] text-slate-400">
                     ※ リンクを知っている人は誰でも開けます。他人に教えないでください
                   </p>
                 </div>
